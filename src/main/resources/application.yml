@@ -1,0 +1,80 @@
+spring:
+  jmx:
+    enabled: false
+  application:
+    name: Lego Imaging Application
+  datasource:
+    url: jdbc:mysql://shared50.accountservergroup.com:3306/a925261_dev_lego?useUnicode=true&useJDBCCompliantTimezoneShift=true&useLegacyDatetimeCode=false&serverTimezone=UTC
+    client-config-dir: C:\Users\tvatt\.credentials\site5\database
+    client-config-file: site5-database-configuration.json
+    database-key-name: site5-lego-dev
+    hikari:
+      connection-timeout: 10000
+      idle-timeout: 30000
+      connection-test-query: SELECT 1
+      initialization-fail-timeout: 10000
+      auto-commit: false
+      login-timeout: 10000
+      minimum-idle: 5
+      maximum-pool-size: 25
+      validation-timeout: 10000
+      pool-name: site5-mysql-jdbc-pool
+
+logging:
+  level:
+    root: DEBUG
+    com.vattima.lego.data.ibatis.mapper: DEBUG
+    net.bricklink.data: WARN
+    com.bricklink: WARN
+    org.springframework.jdbc: WARN
+    org.mybatis: DEBUG
+    com.gargoylesoftware: ERROR
+    com.gargoylesoftware.htmlunit.javascript.StrictErrorReporter: OFF
+    com.zaxxer: DEBUG
+    feign: WARN
+    sun: WARN
+
+bricklink:
+  rest:
+    client-config-dir: C:\Users\tvatt\.credentials\bricklink
+    client-config-file: bricklink-client-api-keys.json
+  web:
+    client-config-dir: C:\Users\tvatt\.credentials\bricklink
+    client-config-file: bricklink-web.json
+
+
+lego:
+  sheet:
+    dataStoreDir: c:/users/tvatt/.credentials/sheets.googleapis.com-java-quickstart
+    clientSecretDir: /client_secret.json
+    id: 1KegFWxww3v6qWn6lfg8PWb-X8Ipc8Y3Asq7l6subgq4
+    workbook: By BOX
+    #workbook: By BOX, by NUMBER
+    range: A2:F
+  imaging:
+    root-images-folder: C:/Users/tvatt/Desktop/lego-collection-photos
+    root-inventory-items-folder: C:/Users/tvatt/Desktop/lego-collection-photos
+    keywords-key-name: "Keywords:"
+
+flickr:
+  client-config-dir: C:\Users\tvatt\.credentials\flickr.api
+  client-config-file: flickr-client-api-keys.json
+  application-name: lego-imaging
+  debug-request: false
+  debug-stream: false
+
+bitly:
+  client-config-dir: C:\Users\tvatt\.credentials\bitly.api
+  client-config-file: bitly-client-api-keys.json
+
+mybatis:
+  type-aliases-package: com.vattima.lego.data.ibatis.type.aliases
+  type-handlers-package: com.vattima.lego.data.ibatis.type.handler
+  configuration:
+    map-underscore-to-camel-case: true
+    default-fetch-size: 1000
+    default-statement-timeout: 30
+    lazy-loading-enabled: true
+  mapper-locations: com/vattima/lego/data/ibatis/*
+
+debug: false
