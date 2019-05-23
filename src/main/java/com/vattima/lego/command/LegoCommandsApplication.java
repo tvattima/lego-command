@@ -52,7 +52,7 @@ public class LegoCommandsApplication {
             List<Object> result = commandLine.parseWithHandler(new CommandLine.RunAll(), args.getSourceArgs());
             log.info("parsed [{}]", result);
 
-            AnsiConsole.systemUninstall();
-        }
-    }
+			AnsiConsole.systemUninstall();
+		}
+	}
 }
