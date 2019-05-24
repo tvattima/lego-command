@@ -21,9 +21,9 @@ import picocli.CommandLine;
 
 import java.util.List;
 
+@Slf4j
 @EnableConfigurationProperties
 @SpringBootApplication(scanBasePackages = {"net.bricklink", "com.bricklink", "com.vattima"})
-@Slf4j
 public class LegoCommandsApplication {
 
     public static void main(String[] args) {
@@ -33,22 +33,17 @@ public class LegoCommandsApplication {
     @Component
     @RequiredArgsConstructor
     public static class CommandLineRunner implements ApplicationRunner {
-        private final AlbumManager albumManager;
-        private final LegoImagingProperties legoImagingProperties;
-        private final BricklinkPriceCrawler bricklinkPriceCrawler;
-        private final PhotoServiceUploadManager photoServiceUploadManager;
-        private final BricklinkRestClient bricklinkRestClient;
-        private final BricklinkInventoryDao bricklinkInventoryDao;
-        private final InventoryService inventoryService;
-        private final SaleItemDescriptionBuilder saleItemDescriptionBuilder;
+        private final ManifestsCommand manifestsCommand;
+        private final BricklinkCommand bricklinkCommand;
+        private final InventoryCommand inventoryCommand;
 
         @Override
         public void run(ApplicationArguments args) throws Exception {
             AnsiConsole.systemInstall();
             CommandLine commandLine = new CommandLine(new MainCommand());
-            commandLine.addSubcommand("manifests", new ManifestsCommand(albumManager, legoImagingProperties, photoServiceUploadManager));
-            commandLine.addSubcommand("bricklink", new BricklinkCommand(bricklinkPriceCrawler));
-            commandLine.addSubcommand("inventory", new InventoryCommand(bricklinkInventoryDao, bricklinkRestClient, inventoryService, saleItemDescriptionBuilder));
+            commandLine.addSubcommand("manifests", manifestsCommand);
+            commandLine.addSubcommand("bricklink", bricklinkCommand);
+            commandLine.addSubcommand("inventory", inventoryCommand);
             List<Object> result = commandLine.parseWithHandler(new CommandLine.RunAll(), args.getSourceArgs());
             log.info("parsed [{}]", result);
 

@@ -33,9 +33,12 @@ bitly:
 logging:
    level:
       root: INFO
-      com.vattima.lego.data.ibatis.mapper: WARN
       com.bricklink: WARN
+      com.bricklink.web.configuration: DEBUG
       net.bricklink.data: WARN
+      net.bricklink.data.lego.ibatis.configuration: DEBUG
+      com.vattima.lego.data.ibatis.mapper: WARN
+      com.vattima.lego.imaging.flickr.configuration: DEBUG
       org.springframework.jdbc: WARN
       org.mybatis: WARN
       com.gargoylesoftware: ERROR
@@ -51,6 +54,8 @@ bricklink:
    web:
       client-config-dir: C:\Users\tvatt\.credentials\bricklink
       client-config-file: bricklink-web.json
+      pool:
+        size: 5
 
 flickr:
    client-config-dir: C:\Users\tvatt\.credentials\flickr.api
