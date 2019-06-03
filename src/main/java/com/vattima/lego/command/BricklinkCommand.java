@@ -4,6 +4,7 @@ import com.bricklink.web.support.BricklinkSession;
 import com.bricklink.web.support.BricklinkWebService;
 import com.vattima.lego.imaging.model.AlbumManifest;
 import com.vattima.lego.imaging.service.AlbumManager;
+import com.vattima.lego.imaging.service.ImageScalingService;
 import com.vattima.lego.inventory.pricing.BricklinkPriceCrawler;
 import lombok.Data;
 import lombok.Getter;
@@ -12,7 +13,6 @@ import lombok.Setter;
 import lombok.extern.slf4j.Slf4j;
 import net.bricklink.data.lego.dao.BricklinkInventoryDao;
 import net.bricklink.data.lego.dto.BricklinkInventory;
-import org.apache.commons.pool2.ObjectPool;
 import org.springframework.stereotype.Component;
 import picocli.CommandLine;
 
@@ -28,9 +28,9 @@ import java.util.Optional;
 public class BricklinkCommand implements Runnable {
     private final BricklinkPriceCrawler bricklinkPriceCrawler;
     private final BricklinkInventoryDao bricklinkInventoryDao;
-    private final ObjectPool<BricklinkSession> objectPool;
     private final AlbumManager albumManager;
     private final BricklinkWebService bricklinkWebService;
+    private ImageScalingService imageScalingService = new ImageScalingService();
 
     @Override
     public void run() {
@@ -60,6 +60,7 @@ public class BricklinkCommand implements Runnable {
         public void run() {
             BricklinkInventoryDao bricklinkInventoryDao = parent.getBricklinkInventoryDao();
             AlbumManager albumManager = parent.getAlbumManager();
+            ImageScalingService imageScalingService = parent.getImageScalingService();
             log.info("UpdatePhotosCommand");
 
             bricklinkInventoryDao.getAllForSale()
@@ -73,32 +74,22 @@ public class BricklinkCommand implements Runnable {
                                                         .isPresent())
                                  .filter(PhotoUploadHolder::hasPrimaryPhoto)
                                  .forEach(puh -> {
-                                     uploadPrimaryPhoto(puh);
+                                     uploadPrimaryPhoto(puh, imageScalingService);
                                      log.info("[{}]", puh);
                                  });
         }
 
-        public void uploadPrimaryPhoto(final PhotoUploadHolder photoUploadHolder) {
-            ObjectPool<BricklinkSession> objectPool = parent.getObjectPool();
+        public void uploadPrimaryPhoto(final PhotoUploadHolder photoUploadHolder, final ImageScalingService imageScalingService) {
             BricklinkWebService bricklinkWebService = parent.getBricklinkWebService();
-            BricklinkSession bricklinkSession = null;
             try {
                 AlbumManifest albumManifest = photoUploadHolder.getAlbumManifest();
                 Path photoPath = albumManifest.getPrimaryPhoto().getAbsolutePath();
-//                bricklinkSession = objectPool.borrowObject();
-                bricklinkSession = null;
-                //bricklinkWebService.uploadInventoryImage(bricklinkSession, photoUploadHolder.getBricklinkInventory().getInventoryId(), photoPath);
-                log.info("Invoking bricklinkWebService.uploadInventoryImage({}, {}, {})", bricklinkSession, photoUploadHolder.getBricklinkInventory().getInventoryId(), photoPath);
+                log.info("Scaling photo [{}]", photoPath);
+                Path scaledPhotoPath = imageScalingService.scale(photoPath);
+                log.info("Invoking bricklinkWebService.uploadInventoryImage({}, {})", photoUploadHolder.getBricklinkInventory().getInventoryId(), scaledPhotoPath);
+                bricklinkWebService.uploadInventoryImage(photoUploadHolder.getBricklinkInventory().getInventoryId(), scaledPhotoPath);
             } catch (Exception e) {
                 log.error(e.getMessage(), e);
-            } finally {
-                Optional.ofNullable(bricklinkSession).ifPresent(bs -> {
-                    try {
-                        objectPool.returnObject(bs);
-                    } catch (Exception e) {
-                        log.error(e.getMessage(), e);
-                    }
-                });
             }
         }
     }

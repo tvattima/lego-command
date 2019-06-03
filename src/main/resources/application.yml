@@ -41,6 +41,7 @@ logging:
       com.vattima.lego.imaging.flickr.configuration: DEBUG
       org.springframework.jdbc: WARN
       org.mybatis: WARN
+      org.apache.http: WARN
       com.gargoylesoftware: ERROR
       com.gargoylesoftware.htmlunit.javascript.StrictErrorReporter: OFF
       com.zaxxer: DEBUG
@@ -55,7 +56,9 @@ bricklink:
       client-config-dir: C:\Users\tvatt\.credentials\bricklink
       client-config-file: bricklink-web.json
       pool:
-        size: 5
+         default-max-per-route: 20
+         max-per-route: 20
+         max-total: 50
 
 flickr:
    client-config-dir: C:\Users\tvatt\.credentials\flickr.api
