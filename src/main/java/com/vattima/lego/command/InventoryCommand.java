@@ -5,31 +5,42 @@ import com.bricklink.api.rest.model.v1.BricklinkResource;
 import com.bricklink.api.rest.model.v1.Item;
 import com.bricklink.web.support.BricklinkSession;
 import com.bricklink.web.support.BricklinkWebService;
+import com.google.common.util.concurrent.AtomicDouble;
 import com.vattima.bricklink.inventory.service.InventoryService;
+import com.vattima.bricklink.inventory.service.PriceCalculatorService;
 import com.vattima.bricklink.inventory.service.SaleItemDescriptionBuilder;
 import com.vattima.lego.imaging.model.AlbumManifest;
 import com.vattima.lego.imaging.service.AlbumManager;
 import com.vattima.lego.imaging.service.ImageScalingService;
+import com.vattima.lego.inventory.pricing.PriceNotCalculableException;
 import lombok.Getter;
 import lombok.RequiredArgsConstructor;
 import lombok.Setter;
 import lombok.extern.slf4j.Slf4j;
 import net.bricklink.data.lego.dao.BricklinkInventoryDao;
+import net.bricklink.data.lego.dao.BricklinkSaleItemDao;
+import net.bricklink.data.lego.dto.BricklinkSaleItem;
 import org.springframework.stereotype.Component;
 import picocli.CommandLine;
 
 import java.nio.file.Path;
 import java.util.Arrays;
 import java.util.List;
+import java.util.concurrent.atomic.AtomicInteger;
 
 @Slf4j
 @Getter
 @Setter
 @RequiredArgsConstructor
 @Component
-@CommandLine.Command(name = "inventory", aliases = {"inventory"}, subcommands = {InventoryCommand.SetNotForSaleCommand.class, InventoryCommand.SynchronizeCommand.class})
+@CommandLine.Command(name = "inventory", aliases = {"inventory"},
+        subcommands = {InventoryCommand.SetNotForSaleCommand.class,
+                InventoryCommand.SynchronizeCommand.class,
+                InventoryCommand.PriceCalculatorCommand.class})
 public class InventoryCommand implements Runnable {
+    private final PriceCalculatorService priceCalculatorService;
     private final BricklinkInventoryDao bricklinkInventoryDao;
+    private final BricklinkSaleItemDao bricklinkSaleItemDao;
     private final BricklinkRestClient bricklinkRestClient;
     private final InventoryService inventoryService;
     private final SaleItemDescriptionBuilder saleItemDescriptionBuilder;
@@ -40,6 +51,37 @@ public class InventoryCommand implements Runnable {
     @Override
     public void run() {
         log.info("InventoryCommand");
+    }
+
+    @CommandLine.Command(name = "price-calculator", aliases = {"-pc"}, description = "Computes and updates Prices of all items")
+    static class PriceCalculatorCommand implements Runnable {
+        @CommandLine.ParentCommand
+        InventoryCommand parent;
+
+        @Override
+        public void run() {
+            BricklinkInventoryDao bricklinkInventoryDao = parent.getBricklinkInventoryDao();
+            BricklinkSaleItemDao bricklinkSaleItemDao = parent.getBricklinkSaleItemDao();
+            PriceCalculatorService priceCalculatorService = parent.getPriceCalculatorService();
+            AtomicDouble value = new AtomicDouble();
+            AtomicInteger count = new AtomicInteger();
+            bricklinkInventoryDao.getAllForSale().parallelStream().forEach(bi -> {
+                count.incrementAndGet();
+                double price = 0;
+                try {
+                    price = priceCalculatorService.calculatePrice(bi);
+                    if (Double.isNaN(price)) {
+                        log.warn("[{} {} {} {}] - could not compute price", bi.getNewOrUsed(), bi.getCompleteness(), bi.getBlItemNo(), bi.getItemName());
+                    } else {
+                        value.addAndGet(price);
+                        log.info("[{} {} {} {}] - ${}", bi.getNewOrUsed(), bi.getCompleteness(), bi.getBlItemNo(), bi.getItemName(), price);
+                    }
+                } catch (PriceNotCalculableException e) {
+                    log.error(e.getMessage(), e);
+                }
+            });
+            log.info("Final cumulative value of [{}] items for sale = [{}]", count.get(), value.get());
+        }
     }
 
     @CommandLine.Command(name = "set-not-for-sale", aliases = {"-snfs"}, description = "Updates all bricklink Inventories that are in Bricklink's Train Categories to be Not for Sale")
