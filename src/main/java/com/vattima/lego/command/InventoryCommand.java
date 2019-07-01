@@ -75,6 +75,7 @@ public class InventoryCommand implements Runnable {
                     } else {
                         value.addAndGet(price);
                         log.info("[{} {} {} {}] - ${}", bi.getNewOrUsed(), bi.getCompleteness(), bi.getBlItemNo(), bi.getItemName(), price);
+                        bricklinkInventoryDao.setPrice(bi.getBlInventoryId(), price);
                     }
                 } catch (PriceNotCalculableException e) {
                     log.error(e.getMessage(), e);
