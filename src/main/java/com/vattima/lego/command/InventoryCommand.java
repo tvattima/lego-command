@@ -9,7 +9,9 @@ import com.google.common.util.concurrent.AtomicDouble;
 import com.vattima.bricklink.inventory.service.InventoryService;
 import com.vattima.bricklink.inventory.service.PriceCalculatorService;
 import com.vattima.bricklink.inventory.service.SaleItemDescriptionBuilder;
+import com.vattima.bricklink.inventory.support.SynchronizeResult;
 import com.vattima.lego.imaging.model.AlbumManifest;
+import com.vattima.lego.imaging.model.PhotoMetaData;
 import com.vattima.lego.imaging.service.AlbumManager;
 import com.vattima.lego.imaging.service.ImageScalingService;
 import com.vattima.lego.inventory.pricing.PriceNotCalculableException;
@@ -26,6 +28,7 @@ import picocli.CommandLine;
 import java.nio.file.Path;
 import java.util.Arrays;
 import java.util.List;
+import java.util.Optional;
 import java.util.concurrent.atomic.AtomicInteger;
 
 @Slf4j
@@ -65,7 +68,7 @@ public class InventoryCommand implements Runnable {
             PriceCalculatorService priceCalculatorService = parent.getPriceCalculatorService();
             AtomicDouble value = new AtomicDouble();
             AtomicInteger count = new AtomicInteger();
-            bricklinkInventoryDao.getAllForSale().parallelStream().forEach(bi -> {
+            bricklinkInventoryDao.getAll().parallelStream().forEach(bi -> {
                 count.incrementAndGet();
                 double price = 0;
                 try {
@@ -136,7 +139,7 @@ public class InventoryCommand implements Runnable {
                                      .parallelStream()
                                      .filter(bi -> {
                                          AlbumManifest albumManifest = albumManager.getAlbumManifest(bi.getUuid(), bi.getBlItemNo());
-                                         return albumManifest.hasPrimaryPhoto();
+                                         return albumManifest.hasPrimaryPhoto() || true;
                                      })
                                      .peek(bi -> {
                                          saleItemDescriptionBuilder.buildDescription(bi);
@@ -144,18 +147,35 @@ public class InventoryCommand implements Runnable {
                                          log.info("Description updated for [{}-{}] to [{}]", bi.getBlItemNo(), bi.getUuid(), bi.getDescription());
                                      })
                                      .forEach(bi -> {
+                                         boolean canBeAvailableForSale = false;
                                          try {
                                              AlbumManifest albumManifest = albumManager.getAlbumManifest(bi.getUuid(), bi.getBlItemNo());
-                                             Path scaledImagePath = imageScalingService.scale(albumManifest.getPrimaryPhoto()
-                                                                                                           .getAbsolutePath());
-                                             bricklinkWebService.uploadInventoryImage(bi.getInventoryId(), scaledImagePath);
-                                             log.info("Uploaded primary photo for [{}-{}] with photo [{}]", bi.getBlItemNo(), bi.getUuid(), scaledImagePath);
+                                             if (albumManifest.hasPrimaryPhoto()) {
+                                                 PhotoMetaData photoMetaData = albumManifest.getPrimaryPhoto();
+                                                 if (photoMetaData.isChanged()) {
+                                                     Path scaledImagePath = imageScalingService.scale(photoMetaData.getAbsolutePath());
+                                                     bricklinkWebService.uploadInventoryImage(bi.getInventoryId(), scaledImagePath);
+                                                     log.info("Uploaded primary photo for [{}-{}] with photo [{}]", bi.getBlItemNo(), bi.getUuid(), scaledImagePath);
+                                                 } else {
+                                                     log.info("Primary photo for [{}-{}] not changed - no scaling or upload needed", bi.getBlItemNo(), bi.getUuid());
+                                                 }
+                                             }
+                                             canBeAvailableForSale = bi.canBeAvailableForSale() && albumManifest.hasPrimaryPhoto();
                                          } catch (Exception e) {
                                              log.error(e.getMessage(), e);
                                          }
 
                                          log.info("Starting to synchronize [{}-{}]", bi.getBlItemNo(), bi.getUuid());
-                                         inventoryService.synchronize(bi);
+                                         //bi.setIsStockRoom(!canBeAvailableForSale);
+                                         if (canBeAvailableForSale) {
+                                             log.info("[{}-{}] is available for sale", bi.getBlItemNo(), bi.getUuid());
+                                         }
+                                         Optional<SynchronizeResult> result = Optional.ofNullable(inventoryService.synchronize(bi));
+                                         result.ifPresent(r -> {
+                                             if (!r.isSuccess()) {
+                                                 log.error("Error synchronizing [{}-{}] - code [{}], message [{}], description [{}]", bi.getBlItemNo(), bi.getUuid(), r.getCode(), r.getMessage(), r.getDescription());
+                                             }
+                                         });
                                          log.info("Completed synchronization of [{}-{}]", bi.getBlItemNo(), bi.getUuid());
                                      });
             } finally {
