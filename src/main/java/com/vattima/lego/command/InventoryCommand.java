@@ -81,7 +81,7 @@ public class InventoryCommand implements Runnable {
                         bricklinkInventoryDao.setPrice(bi.getBlInventoryId(), price);
                     }
                 } catch (PriceNotCalculableException e) {
-                    log.error(e.getMessage(), e);
+                    log.error("[{} {} {} {}] - Error [{}]", bi.getNewOrUsed(), bi.getCompleteness(), bi.getBlItemNo(), bi.getItemName(), e.getMessage());
                 }
             });
             log.info("Final cumulative value of [{}] items for sale = [{}]", count.get(), value.get());
