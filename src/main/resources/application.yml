@@ -4,7 +4,6 @@ spring:
    application:
       name: Lego Commands
    datasource:
-      url: jdbc:mysql://shared50.accountservergroup.com:3306/a925261_dev_lego?useUnicode=true&useJDBCCompliantTimezoneShift=true&useLegacyDatetimeCode=false&serverTimezone=UTC
       client-config-dir: C:\Users\tvatt\.credentials\site5\database
       client-config-file: site5-database-configuration.json
       database-key-name: site5-lego-dev
@@ -37,6 +36,7 @@ logging:
       com.bricklink.web.configuration: DEBUG
       net.bricklink.data: WARN
       net.bricklink.data.lego.ibatis.configuration: DEBUG
+      net.bricklink.data.lego.dto: INFO
       com.vattima.lego.data.ibatis.mapper: WARN
       com.vattima.lego.imaging.flickr.configuration: DEBUG
       org.springframework.jdbc: WARN

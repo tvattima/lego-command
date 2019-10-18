@@ -3,6 +3,7 @@ package com.vattima.lego.command;
 import com.bricklink.api.rest.client.BricklinkRestClient;
 import com.bricklink.api.rest.model.v1.BricklinkResource;
 import com.bricklink.api.rest.model.v1.Item;
+import com.bricklink.api.rest.model.v1.Order;
 import com.bricklink.web.support.BricklinkSession;
 import com.bricklink.web.support.BricklinkWebService;
 import com.google.common.util.concurrent.AtomicDouble;
@@ -21,14 +22,11 @@ import lombok.Setter;
 import lombok.extern.slf4j.Slf4j;
 import net.bricklink.data.lego.dao.BricklinkInventoryDao;
 import net.bricklink.data.lego.dao.BricklinkSaleItemDao;
-import net.bricklink.data.lego.dto.BricklinkSaleItem;
 import org.springframework.stereotype.Component;
 import picocli.CommandLine;
 
 import java.nio.file.Path;
-import java.util.Arrays;
-import java.util.List;
-import java.util.Optional;
+import java.util.*;
 import java.util.concurrent.atomic.AtomicInteger;
 
 @Slf4j
@@ -64,24 +62,31 @@ public class InventoryCommand implements Runnable {
         @Override
         public void run() {
             BricklinkInventoryDao bricklinkInventoryDao = parent.getBricklinkInventoryDao();
-            BricklinkSaleItemDao bricklinkSaleItemDao = parent.getBricklinkSaleItemDao();
             PriceCalculatorService priceCalculatorService = parent.getPriceCalculatorService();
             AtomicDouble value = new AtomicDouble();
             AtomicInteger count = new AtomicInteger();
-            bricklinkInventoryDao.getAll().parallelStream().forEach(bi -> {
+            bricklinkInventoryDao.getAll()
+                                 .parallelStream()
+                                 .forEach(bi -> {
                 count.incrementAndGet();
-                double price = 0;
-                try {
-                    price = priceCalculatorService.calculatePrice(bi);
-                    if (Double.isNaN(price)) {
-                        log.warn("[{} {} {} {}] - could not compute price", bi.getNewOrUsed(), bi.getCompleteness(), bi.getBlItemNo(), bi.getItemName());
-                    } else {
-                        value.addAndGet(price);
-                        log.info("[{} {} {} {}] - ${}", bi.getNewOrUsed(), bi.getCompleteness(), bi.getBlItemNo(), bi.getItemName(), price);
-                        bricklinkInventoryDao.setPrice(bi.getBlInventoryId(), price);
+                if (Optional.ofNullable(bi.getOrderId()).isPresent()) {
+                    log.warn("[{} {} {} {}] - Inventory Item is on order [{}] - skipping price calculation", bi.getNewOrUsed(), bi.getCompleteness(), bi.getBlItemNo(), bi.getItemName(), bi.getOrderId());
+                } else {
+                    try {
+                        double price = priceCalculatorService.calculatePrice(bi);
+                        if (Double.isNaN(price)) {
+                            log.warn("[{} {} {} {}] - could not compute price", bi.getNewOrUsed(), bi.getCompleteness(), bi.getBlItemNo(), bi.getItemName());
+                        } else if (Optional.ofNullable(bi.getFixedPrice())
+                                           .orElse(false)) {
+                            log.warn("[{} {} {} {}] - has fixed price [{}] - not using computed price [{}]", bi.getNewOrUsed(), bi.getCompleteness(), bi.getBlItemNo(), bi.getItemName(), bi.getUnitPrice(), price);
+                        } else {
+                            value.addAndGet(price);
+                            log.info("[{} {} {} {}] - ${}", bi.getNewOrUsed(), bi.getCompleteness(), bi.getBlItemNo(), bi.getItemName(), price);
+                            bricklinkInventoryDao.setPrice(bi.getBlInventoryId(), price);
+                        }
+                    } catch (PriceNotCalculableException e) {
+                        log.error("[{} {} {} {}] - Error [{}]", bi.getNewOrUsed(), bi.getCompleteness(), bi.getBlItemNo(), bi.getItemName(), e.getMessage());
                     }
-                } catch (PriceNotCalculableException e) {
-                    log.error("[{} {} {} {}] - Error [{}]", bi.getNewOrUsed(), bi.getCompleteness(), bi.getBlItemNo(), bi.getItemName(), e.getMessage());
                 }
             });
             log.info("Final cumulative value of [{}] items for sale = [{}]", count.get(), value.get());
@@ -127,13 +132,24 @@ public class InventoryCommand implements Runnable {
         @Override
         public void run() {
             log.info("Synchronize Command");
+
             AlbumManager albumManager = parent.getAlbumManager();
             BricklinkInventoryDao bricklinkInventoryDao = parent.getBricklinkInventoryDao();
             BricklinkWebService bricklinkWebService = parent.getBricklinkWebService();
             SaleItemDescriptionBuilder saleItemDescriptionBuilder = parent.getSaleItemDescriptionBuilder();
             InventoryService inventoryService = parent.getInventoryService();
             ImageScalingService imageScalingService = parent.getImageScalingService();
+            BricklinkRestClient bricklinkRestClient = parent.getBricklinkRestClient();
+
             BricklinkSession bricklinkSession = bricklinkWebService.authenticate();
+
+            // Get all orders and update Bricklink Inventory
+            Map<String, Object> params = new HashMap<>();
+            BricklinkResource<List<Order>> orders = bricklinkRestClient.getOrders(params);
+            orders.getData().forEach(o -> {
+                inventoryService.updateInventoryItemsOnOrder(o.getOrder_id());
+            });
+
             try {
                 bricklinkInventoryDao.getInventoryWork(true)
                                      .parallelStream()
@@ -159,6 +175,8 @@ public class InventoryCommand implements Runnable {
                                                  } else {
                                                      log.info("Primary photo for [{}-{}] not changed - no scaling or upload needed", bi.getBlItemNo(), bi.getUuid());
                                                  }
+                                             } else {
+                                                 log.info("No primary photo specified for [{}-{}]", bi.getBlItemNo(), bi.getUuid());
                                              }
                                              canBeAvailableForSale = bi.canBeAvailableForSale() && albumManifest.hasPrimaryPhoto();
                                          } catch (Exception e) {
@@ -166,10 +184,13 @@ public class InventoryCommand implements Runnable {
                                          }
 
                                          log.info("Starting to synchronize [{}-{}]", bi.getBlItemNo(), bi.getUuid());
-                                         //bi.setIsStockRoom(!canBeAvailableForSale);
                                          if (canBeAvailableForSale) {
                                              log.info("[{}-{}] is available for sale", bi.getBlItemNo(), bi.getUuid());
+                                         } else {
+                                             log.info("[{}-{}] is not available for sale", bi.getBlItemNo(), bi.getUuid());
                                          }
+                                         bi.setIsStockRoom(!canBeAvailableForSale);
+                                         bricklinkInventoryDao.update(bi);
                                          Optional<SynchronizeResult> result = Optional.ofNullable(inventoryService.synchronize(bi));
                                          result.ifPresent(r -> {
                                              if (!r.isSuccess()) {
