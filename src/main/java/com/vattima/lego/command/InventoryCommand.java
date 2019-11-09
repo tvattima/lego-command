@@ -22,6 +22,7 @@ import lombok.Setter;
 import lombok.extern.slf4j.Slf4j;
 import net.bricklink.data.lego.dao.BricklinkInventoryDao;
 import net.bricklink.data.lego.dao.BricklinkSaleItemDao;
+import net.bricklink.data.lego.dto.BricklinkInventory;
 import org.springframework.stereotype.Component;
 import picocli.CommandLine;
 
@@ -61,36 +62,45 @@ public class InventoryCommand implements Runnable {
 
         @Override
         public void run() {
+            List<String> itemsToInclude = new ArrayList<>();
+//            itemsToInclude.add("0908b5bffadf0958be2f036eb10ac35a");
+
             BricklinkInventoryDao bricklinkInventoryDao = parent.getBricklinkInventoryDao();
             PriceCalculatorService priceCalculatorService = parent.getPriceCalculatorService();
             AtomicDouble value = new AtomicDouble();
             AtomicInteger count = new AtomicInteger();
             bricklinkInventoryDao.getAll()
                                  .parallelStream()
+                                 .filter(bi -> ((itemsToInclude.size() == 0) || (itemsToInclude.contains(bi.getUuid()) || itemsToInclude.contains(bi.getBlItemNo()))))
                                  .forEach(bi -> {
                 count.incrementAndGet();
                 if (Optional.ofNullable(bi.getOrderId()).isPresent()) {
-                    log.warn("[{} {} {} {}] - Inventory Item is on order [{}] - skipping price calculation", bi.getNewOrUsed(), bi.getCompleteness(), bi.getBlItemNo(), bi.getItemName(), bi.getOrderId());
+                    log.warn("{} - Inventory Item is on order [{}] - skipping price calculation", logMessage(bi), bi.getOrderId());
                 } else {
+                    double price = Double.NaN;
                     try {
-                        double price = priceCalculatorService.calculatePrice(bi);
-                        if (Double.isNaN(price)) {
-                            log.warn("[{} {} {} {}] - could not compute price", bi.getNewOrUsed(), bi.getCompleteness(), bi.getBlItemNo(), bi.getItemName());
-                        } else if (Optional.ofNullable(bi.getFixedPrice())
-                                           .orElse(false)) {
-                            log.warn("[{} {} {} {}] - has fixed price [{}] - not using computed price [{}]", bi.getNewOrUsed(), bi.getCompleteness(), bi.getBlItemNo(), bi.getItemName(), bi.getUnitPrice(), price);
-                        } else {
-                            value.addAndGet(price);
-                            log.info("[{} {} {} {}] - ${}", bi.getNewOrUsed(), bi.getCompleteness(), bi.getBlItemNo(), bi.getItemName(), price);
-                            bricklinkInventoryDao.setPrice(bi.getBlInventoryId(), price);
-                        }
+                        price = priceCalculatorService.calculatePrice(bi);
+                        value.addAndGet(bi.getUnitPrice());
                     } catch (PriceNotCalculableException e) {
-                        log.error("[{} {} {} {}] - Error [{}]", bi.getNewOrUsed(), bi.getCompleteness(), bi.getBlItemNo(), bi.getItemName(), e.getMessage());
+                        log.error("{} - Error [{}]", logMessage(bi), e.getMessage());
+                    }
+                    if (Double.isNaN(price)) {
+                        log.warn("{} - could not compute price", logMessage(bi));
+                    } else if (Optional.ofNullable(bi.getFixedPrice())
+                                       .orElse(false)) {
+                        log.warn("{} - has fixed price [{}] - not using computed price [{}]", logMessage(bi), bi.getUnitPrice(), price);
+                    } else {
+                        log.info("{} - ${}", logMessage(bi), price);
+                        bricklinkInventoryDao.setPrice(bi.getBlInventoryId(), price);
                     }
                 }
             });
             log.info("Final cumulative value of [{}] items for sale = [{}]", count.get(), value.get());
         }
+    }
+
+    private static String logMessage(BricklinkInventory bi) {
+        return String.format("[Box[%s] %s %s %s %s]", bi.getBoxId(), bi.getNewOrUsed(), bi.getCompleteness(), bi.getBlItemNo(), bi.getItemName());
     }
 
     @CommandLine.Command(name = "set-not-for-sale", aliases = {"-snfs"}, description = "Updates all bricklink Inventories that are in Bricklink's Train Categories to be Not for Sale")
@@ -151,12 +161,16 @@ public class InventoryCommand implements Runnable {
             });
 
             try {
+                List<String> itemsToInclude = new ArrayList<>();
+//                itemsToInclude.add("74e82e44df50d8144bb1a4f382de5b0f");
+
                 bricklinkInventoryDao.getInventoryWork(true)
                                      .parallelStream()
                                      .filter(bi -> {
                                          AlbumManifest albumManifest = albumManager.getAlbumManifest(bi.getUuid(), bi.getBlItemNo());
                                          return albumManifest.hasPrimaryPhoto() || true;
                                      })
+                                     .filter(bi -> ((itemsToInclude.size() == 0) || (itemsToInclude.contains(bi.getUuid()) || itemsToInclude.contains(bi.getBlItemNo()))))
                                      .peek(bi -> {
                                          saleItemDescriptionBuilder.buildDescription(bi);
                                          bricklinkInventoryDao.update(bi);
@@ -176,7 +190,7 @@ public class InventoryCommand implements Runnable {
                                                      log.info("Primary photo for [{}-{}] not changed - no scaling or upload needed", bi.getBlItemNo(), bi.getUuid());
                                                  }
                                              } else {
-                                                 log.info("No primary photo specified for [{}-{}]", bi.getBlItemNo(), bi.getUuid());
+                                                 log.warn("No primary photo specified for [{}-{}]", bi.getBlItemNo(), bi.getUuid());
                                              }
                                              canBeAvailableForSale = bi.canBeAvailableForSale() && albumManifest.hasPrimaryPhoto();
                                          } catch (Exception e) {
@@ -187,7 +201,7 @@ public class InventoryCommand implements Runnable {
                                          if (canBeAvailableForSale) {
                                              log.info("[{}-{}] is available for sale", bi.getBlItemNo(), bi.getUuid());
                                          } else {
-                                             log.info("[{}-{}] is not available for sale", bi.getBlItemNo(), bi.getUuid());
+                                             log.warn("[{}-{}] is not available for sale", bi.getBlItemNo(), bi.getUuid());
                                          }
                                          bi.setIsStockRoom(!canBeAvailableForSale);
                                          bricklinkInventoryDao.update(bi);
