@@ -36,6 +36,7 @@ public class LegoCommandsApplication {
         private final ManifestsCommand manifestsCommand;
         private final BricklinkCommand bricklinkCommand;
         private final InventoryCommand inventoryCommand;
+        private final FulfillmentCommand fulfillmentCommand;
 
         @Override
         public void run(ApplicationArguments args) throws Exception {
@@ -44,6 +45,7 @@ public class LegoCommandsApplication {
             commandLine.addSubcommand("manifests", manifestsCommand);
             commandLine.addSubcommand("bricklink", bricklinkCommand);
             commandLine.addSubcommand("inventory", inventoryCommand);
+            commandLine.addSubcommand("fulfillment", fulfillmentCommand);
             List<Object> result = commandLine.parseWithHandler(new CommandLine.RunAll(), args.getSourceArgs());
             log.info("parsed [{}]", result);
 

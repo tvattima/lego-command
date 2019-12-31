@@ -1,4 +1,6 @@
 spring:
+   main:
+      web-application-type: none
    jmx:
       enabled: false
    application:
@@ -15,7 +17,7 @@ spring:
          auto-commit: false
          login-timeout: 10000
          minimum-idle: 5
-         maximum-pool-size: 25
+         maximum-pool-size: 5
          validation-timeout: 10000
          pool-name: site5-mysql-jdbc-pool
 
@@ -33,18 +35,20 @@ logging:
    level:
       root: INFO
       com.bricklink: WARN
-      com.bricklink.web.configuration: DEBUG
+      com.bricklink.api.rest.client: WARN
+      com.bricklink.web.configuration: WARN
       net.bricklink.data: WARN
-      net.bricklink.data.lego.ibatis.configuration: DEBUG
+      net.bricklink.data.lego.ibatis.configuration: WARN
       net.bricklink.data.lego.dto: INFO
       com.vattima.lego.data.ibatis.mapper: WARN
-      com.vattima.lego.imaging.flickr.configuration: DEBUG
+      com.vattima.lego.imaging.flickr.configuration: WARN
       org.springframework.jdbc: WARN
       org.mybatis: WARN
       org.apache.http: WARN
+      okhttp3: WARN
       com.gargoylesoftware: ERROR
       com.gargoylesoftware.htmlunit.javascript.StrictErrorReporter: OFF
-      com.zaxxer: DEBUG
+      com.zaxxer: WARN
       feign: WARN
       sun: WARN
 
@@ -66,6 +70,10 @@ flickr:
    application-name: lego-imaging
    debug-request: false
    debug-stream: false
+
+shipstation:
+   client-config-dir: C:\Users\tvatt\.credentials\shipstation.api
+   client-config-file: shipstation-client-config.json
 
 mybatis:
    type-aliases-package: com.vattima.lego.data.ibatis.type.aliases

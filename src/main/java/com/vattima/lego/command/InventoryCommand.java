@@ -1,12 +1,12 @@
 package com.vattima.lego.command;
 
 import com.bricklink.api.rest.client.BricklinkRestClient;
+import com.bricklink.api.rest.client.ParamsBuilder;
 import com.bricklink.api.rest.model.v1.BricklinkResource;
 import com.bricklink.api.rest.model.v1.Item;
 import com.bricklink.api.rest.model.v1.Order;
 import com.bricklink.web.support.BricklinkSession;
 import com.bricklink.web.support.BricklinkWebService;
-import com.google.common.util.concurrent.AtomicDouble;
 import com.vattima.bricklink.inventory.service.InventoryService;
 import com.vattima.bricklink.inventory.service.PriceCalculatorService;
 import com.vattima.bricklink.inventory.service.SaleItemDescriptionBuilder;
@@ -29,6 +29,8 @@ import picocli.CommandLine;
 import java.nio.file.Path;
 import java.util.*;
 import java.util.concurrent.atomic.AtomicInteger;
+import java.util.concurrent.atomic.DoubleAdder;
+import java.util.stream.Stream;
 
 @Slf4j
 @Getter
@@ -67,7 +69,7 @@ public class InventoryCommand implements Runnable {
 
             BricklinkInventoryDao bricklinkInventoryDao = parent.getBricklinkInventoryDao();
             PriceCalculatorService priceCalculatorService = parent.getPriceCalculatorService();
-            AtomicDouble value = new AtomicDouble();
+            DoubleAdder value = new DoubleAdder();
             AtomicInteger count = new AtomicInteger();
             bricklinkInventoryDao.getAll()
                                  .parallelStream()
@@ -80,7 +82,8 @@ public class InventoryCommand implements Runnable {
                     double price = Double.NaN;
                     try {
                         price = priceCalculatorService.calculatePrice(bi);
-                        value.addAndGet(bi.getUnitPrice());
+                        //value.addAndGet(bi.getUnitPrice());
+                        value.add(bi.getUnitPrice());
                     } catch (PriceNotCalculableException e) {
                         log.error("{} - Error [{}]", logMessage(bi), e.getMessage());
                     }
@@ -95,7 +98,7 @@ public class InventoryCommand implements Runnable {
                     }
                 }
             });
-            log.info("Final cumulative value of [{}] items for sale = [{}]", count.get(), value.get());
+            log.info("Final cumulative value of [{}] items for sale = [{}]", count.get(), value.doubleValue());
         }
     }
 
@@ -154,21 +157,22 @@ public class InventoryCommand implements Runnable {
             BricklinkSession bricklinkSession = bricklinkWebService.authenticate();
 
             // Get all orders and update Bricklink Inventory
-            Map<String, Object> params = new HashMap<>();
-            BricklinkResource<List<Order>> orders = bricklinkRestClient.getOrders(params);
-            orders.getData().forEach(o -> {
+            BricklinkResource<List<Order>> filedOrders = bricklinkRestClient.getOrders(new ParamsBuilder().of("direction", "in").of("filed", true).get());
+            BricklinkResource<List<Order>> notFiledOrders = bricklinkRestClient.getOrders(new ParamsBuilder().of("direction", "in").of("filed", false).get());
+            Stream<Order> allOrdersStream = Stream.concat(filedOrders.getData().stream(), notFiledOrders.getData().stream());
+            allOrdersStream.forEach(o -> {
                 inventoryService.updateInventoryItemsOnOrder(o.getOrder_id());
             });
 
             try {
                 List<String> itemsToInclude = new ArrayList<>();
-//                itemsToInclude.add("74e82e44df50d8144bb1a4f382de5b0f");
+                //itemsToInclude.add("018d17b16432e7eee71d9fb23c736cdd");
 
                 bricklinkInventoryDao.getInventoryWork(true)
                                      .parallelStream()
                                      .filter(bi -> {
                                          AlbumManifest albumManifest = albumManager.getAlbumManifest(bi.getUuid(), bi.getBlItemNo());
-                                         return albumManifest.hasPrimaryPhoto() || true;
+                                         return albumManifest.hasPrimaryPhoto();
                                      })
                                      .filter(bi -> ((itemsToInclude.size() == 0) || (itemsToInclude.contains(bi.getUuid()) || itemsToInclude.contains(bi.getBlItemNo()))))
                                      .peek(bi -> {
