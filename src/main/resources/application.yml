@@ -34,17 +34,18 @@ bitly:
 logging:
    level:
       root: INFO
-      com.bricklink: WARN
-      com.bricklink.api.rest.client: WARN
-      com.bricklink.web.configuration: WARN
-      net.bricklink.data: WARN
-      net.bricklink.data.lego.ibatis.configuration: WARN
+      com.bricklink: INFO
+      com.bricklink.api.rest.client: INFO
+      com.bricklink.web.configuration: INFO
+      net.bricklink.data: INFO
+      net.bricklink.data.lego.ibatis.configuration: INFO
       net.bricklink.data.lego.dto: INFO
-      com.vattima.lego.data.ibatis.mapper: WARN
-      com.vattima.lego.imaging.flickr.configuration: WARN
+      com.vattima.lego.data.ibatis.mapper: INFO
+      com.vattima.lego.imaging.flickr.configuration: INFO
+      com.vattima.lego.imaging.service.flickr: WARN
       org.springframework.jdbc: WARN
       org.mybatis: WARN
-      org.apache.http: WARN
+      org.apache.http: ERROR
       okhttp3: WARN
       com.gargoylesoftware: ERROR
       com.gargoylesoftware.htmlunit.javascript.StrictErrorReporter: OFF
@@ -74,6 +75,10 @@ flickr:
 shipstation:
    client-config-dir: C:\Users\tvatt\.credentials\shipstation.api
    client-config-file: shipstation-client-config.json
+
+reference:
+   static-reference:
+      country: static/reference/iso-country-code-mapping.json
 
 mybatis:
    type-aliases-package: com.vattima.lego.data.ibatis.type.aliases

@@ -7,6 +7,8 @@ import com.bricklink.api.rest.model.v1.Item;
 import com.bricklink.api.rest.model.v1.Order;
 import com.bricklink.web.support.BricklinkSession;
 import com.bricklink.web.support.BricklinkWebService;
+import com.flickr4java.flickr.photos.Photo;
+import com.flickr4java.flickr.photos.PhotosInterface;
 import com.vattima.bricklink.inventory.service.InventoryService;
 import com.vattima.bricklink.inventory.service.PriceCalculatorService;
 import com.vattima.bricklink.inventory.service.SaleItemDescriptionBuilder;
@@ -26,8 +28,12 @@ import net.bricklink.data.lego.dto.BricklinkInventory;
 import org.springframework.stereotype.Component;
 import picocli.CommandLine;
 
+import java.net.URL;
 import java.nio.file.Path;
-import java.util.*;
+import java.util.ArrayList;
+import java.util.Arrays;
+import java.util.List;
+import java.util.Optional;
 import java.util.concurrent.atomic.AtomicInteger;
 import java.util.concurrent.atomic.DoubleAdder;
 import java.util.stream.Stream;
@@ -51,6 +57,7 @@ public class InventoryCommand implements Runnable {
     private final AlbumManager albumManager;
     private final BricklinkWebService bricklinkWebService;
     private final ImageScalingService imageScalingService = new ImageScalingService();
+    private final PhotosInterface photosInterface;
 
     @Override
     public void run() {
@@ -153,6 +160,7 @@ public class InventoryCommand implements Runnable {
             InventoryService inventoryService = parent.getInventoryService();
             ImageScalingService imageScalingService = parent.getImageScalingService();
             BricklinkRestClient bricklinkRestClient = parent.getBricklinkRestClient();
+            PhotosInterface photosInterface = parent.photosInterface;
 
             BricklinkSession bricklinkSession = bricklinkWebService.authenticate();
 
@@ -160,21 +168,23 @@ public class InventoryCommand implements Runnable {
             BricklinkResource<List<Order>> filedOrders = bricklinkRestClient.getOrders(new ParamsBuilder().of("direction", "in").of("filed", true).get());
             BricklinkResource<List<Order>> notFiledOrders = bricklinkRestClient.getOrders(new ParamsBuilder().of("direction", "in").of("filed", false).get());
             Stream<Order> allOrdersStream = Stream.concat(filedOrders.getData().stream(), notFiledOrders.getData().stream());
-            allOrdersStream.forEach(o -> {
+            allOrdersStream.filter(o -> !o.getStatus()
+                                          .equalsIgnoreCase("CANCELLED"))
+                           .forEach(o -> {
                 inventoryService.updateInventoryItemsOnOrder(o.getOrder_id());
             });
 
             try {
                 List<String> itemsToInclude = new ArrayList<>();
-                //itemsToInclude.add("018d17b16432e7eee71d9fb23c736cdd");
+                //itemsToInclude.add("120fdd3d0f580d9e72f5aaffd966d7bf");
 
                 bricklinkInventoryDao.getInventoryWork(true)
                                      .parallelStream()
+                                     .filter(bi -> ((itemsToInclude.size() == 0) || (itemsToInclude.contains(bi.getUuid()) || itemsToInclude.contains(bi.getBlItemNo()))))
                                      .filter(bi -> {
                                          AlbumManifest albumManifest = albumManager.getAlbumManifest(bi.getUuid(), bi.getBlItemNo());
                                          return albumManifest.hasPrimaryPhoto();
                                      })
-                                     .filter(bi -> ((itemsToInclude.size() == 0) || (itemsToInclude.contains(bi.getUuid()) || itemsToInclude.contains(bi.getBlItemNo()))))
                                      .peek(bi -> {
                                          saleItemDescriptionBuilder.buildDescription(bi);
                                          bricklinkInventoryDao.update(bi);
@@ -187,7 +197,8 @@ public class InventoryCommand implements Runnable {
                                              if (albumManifest.hasPrimaryPhoto()) {
                                                  PhotoMetaData photoMetaData = albumManifest.getPrimaryPhoto();
                                                  if (photoMetaData.isChanged()) {
-                                                     Path scaledImagePath = imageScalingService.scale(photoMetaData.getAbsolutePath());
+                                                     Photo photo = photosInterface.getPhoto(photoMetaData.getPhotoId());
+                                                     Path scaledImagePath = imageScalingService.scale(new URL(photo.getMedium800Url()));
                                                      bricklinkWebService.uploadInventoryImage(bi.getInventoryId(), scaledImagePath);
                                                      log.info("Uploaded primary photo for [{}-{}] with photo [{}]", bi.getBlItemNo(), bi.getUuid(), scaledImagePath);
                                                  } else {
@@ -215,6 +226,11 @@ public class InventoryCommand implements Runnable {
                                                  log.error("Error synchronizing [{}-{}] - code [{}], message [{}], description [{}]", bi.getBlItemNo(), bi.getUuid(), r.getCode(), r.getMessage(), r.getDescription());
                                              }
                                          });
+                                         Optional.ofNullable(bi.getExtendedDescription())
+                                                 .ifPresent(ed -> {
+                                                     bricklinkWebService.updateExtendedDescription(bi.getInventoryId(), ed);
+                                                 });
+                                         bricklinkWebService.updateInventoryCondition(bi.getInventoryId(), bi.getNewOrUsed(), bi.getCompleteness());
                                          log.info("Completed synchronization of [{}-{}]", bi.getBlItemNo(), bi.getUuid());
                                      });
             } finally {

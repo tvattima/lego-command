@@ -1,9 +1,10 @@
 package com.vattima.lego.command;
 
-import com.bricklink.api.rest.client.BricklinkRestClient;
-import com.bricklink.api.rest.client.ParamsBuilder;
-import com.bricklink.api.rest.model.v1.BricklinkResource;
-import com.bricklink.api.rest.model.v1.Order;
+import com.bricklink.fulfillment.api.bricklink.BricklinkOrderService;
+import com.bricklink.fulfillment.api.shipstation.OrdersAPI;
+import com.bricklink.fulfillment.api.shipstation.ShipStationOrderService;
+import com.bricklink.fulfillment.mapper.BricklinkToShipstationMapper;
+import com.bricklink.fulfillment.shipstation.model.ShipStationOrder;
 import lombok.Getter;
 import lombok.RequiredArgsConstructor;
 import lombok.Setter;
@@ -11,8 +12,6 @@ import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Component;
 import picocli.CommandLine;
 
-import java.util.ArrayList;
-import java.util.Arrays;
 import java.util.List;
 
 @Slf4j
@@ -22,14 +21,17 @@ import java.util.List;
 @Component
 @RequiredArgsConstructor
 public class FulfillmentCommand implements Runnable {
-    private final BricklinkRestClient bricklinkRestClient;
+    private final OrdersAPI ordersAPI;
+    private final BricklinkOrderService bricklinkOrderService;
+    private final ShipStationOrderService shipStationOrderService;
+    private final BricklinkToShipstationMapper mapper;
 
     @Override
     public void run() {
         log.info("FulfillmentCommand");
     }
 
-    @CommandLine.Command(name = "pull-orders", aliases = {"-po"}, description = "Pulls Bricklink orders and creates or updates them into ShipStation")
+    @CommandLine.Command(name = "pull-order", aliases = {"-po"}, description = "Pulls a Bricklink order and creates or updates it in ShipStation")
     static class PullOrdersCommand implements Runnable {
 
         @CommandLine.ParentCommand
@@ -37,27 +39,31 @@ public class FulfillmentCommand implements Runnable {
 
         @Override
         public void run() {
-            BricklinkRestClient bricklinkRestClient = parent.getBricklinkRestClient();
-            log.info("Pull-Orders Command");
+            OrdersAPI ordersAPI = parent.ordersAPI;
+            BricklinkOrderService bricklinkOrderService = parent.bricklinkOrderService;
+            ShipStationOrderService shipStationOrderService = parent.shipStationOrderService;
+            BricklinkToShipstationMapper mapper = parent.mapper;
+
+            log.info("Pull-Order Command");
 
             // Get all PENDING / UPDATED Bricklink orders
-            BricklinkResource<List<Order>> ordersResource = bricklinkRestClient.getOrders(new ParamsBuilder().of("direction", "in").get(), Arrays.asList("Pending"));
-            List<Order> orders = ordersResource.getData();
-            ordersResource = bricklinkRestClient.getOrders(new ParamsBuilder().of("direction", "in").get(), Arrays.asList("Updated"));
-            List<Order> updatedOrders = ordersResource.getData();
-            orders.addAll(updatedOrders);
+            List<com.bricklink.api.rest.model.v1.Order> orders = bricklinkOrderService.getOrdersForFulfillment();
+
             log.info("orders [{}]", orders.size());
             orders.forEach(o -> {
-                log.info("[{}]", o);
+                com.bricklink.api.rest.model.v1.Order order = bricklinkOrderService.getOrder(o.getOrder_id());
+                ShipStationOrder shipStationOrder = shipStationOrderService.getOrder(o.getOrder_id());
+                mapper.mapBricklinkOrderToShipStationOrder(order, shipStationOrder);
+                bricklinkOrderService.getOrderItems(o.getOrder_id())
+                            .forEach(blOrderItem -> {
+                                mapper.addOrderItem(blOrderItem, shipStationOrder);
+                            });
+                if (bricklinkOrderService.isInternational(order)) {
+                    shipStationOrder.createInternationalOptions();
+                }
+                ShipStationOrder shipStationOrderFinal = ordersAPI.createOrUpdateOrder(shipStationOrder);
+                log.info("Created/Updated Shipstation Order [{}]", shipStationOrderFinal);
             });
-
-//            // For each Bricklink Order
-//            orders.stream().map(bo -> {
-//
-//            })
-            //    Find ShipStation Order
-            //    If found, update ShipStation Order
-            //    If not found, create ShipStation Order
         }
     }
 }

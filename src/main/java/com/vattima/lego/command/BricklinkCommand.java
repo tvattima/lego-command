@@ -73,6 +73,7 @@ public class BricklinkCommand implements Runnable {
                                                                        .getInventoryId())
                                                         .isPresent())
                                  .filter(PhotoUploadHolder::hasPrimaryPhoto)
+//                                 .filter(puh -> puh.getAlbumManifest().getPrimaryPhoto().isChanged())
                                  .forEach(puh -> {
                                      uploadPrimaryPhoto(puh, imageScalingService);
                                      log.info("[{}]", puh);
