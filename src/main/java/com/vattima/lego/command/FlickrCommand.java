@@ -15,7 +15,7 @@ import lombok.RequiredArgsConstructor;
 import lombok.Setter;
 import lombok.extern.slf4j.Slf4j;
 import net.bricklink.data.lego.dto.BricklinkItem;
-import net.bricklink.data.lego.ibatis.mapper.BrinklinkItemMapper;
+import net.bricklink.data.lego.ibatis.mapper.BricklinkItemMapper;
 import org.springframework.stereotype.Component;
 import picocli.CommandLine;
 
@@ -35,7 +35,7 @@ import java.util.stream.Collectors;
 public class FlickrCommand implements Runnable {
     private final PhotosetsInterface photosetsInterface;
     private final CollectionsInterface collectionsInterface;
-    private final BrinklinkItemMapper bricklinkItemMapper;
+    private final BricklinkItemMapper bricklinkItemMapper;
     private final Transport transportAPI;
     private final FlickrProperties.Secrets secrets;
 

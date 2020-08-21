@@ -72,7 +72,7 @@ public class InventoryCommand implements Runnable {
         @Override
         public void run() {
             List<String> itemsToInclude = new ArrayList<>();
-//            itemsToInclude.add("0908b5bffadf0958be2f036eb10ac35a");
+            //itemsToInclude.add("70c5e1177697513b55d3017090ce83a7");
 
             BricklinkInventoryDao bricklinkInventoryDao = parent.getBricklinkInventoryDao();
             PriceCalculatorService priceCalculatorService = parent.getPriceCalculatorService();
@@ -176,7 +176,7 @@ public class InventoryCommand implements Runnable {
 
             try {
                 List<String> itemsToInclude = new ArrayList<>();
-                //itemsToInclude.add("120fdd3d0f580d9e72f5aaffd966d7bf");
+                //itemsToInclude.add("43051ec9b0c3a28f78e2646877e87cf0");
 
                 bricklinkInventoryDao.getInventoryWork(true)
                                      .parallelStream()
@@ -196,14 +196,10 @@ public class InventoryCommand implements Runnable {
                                              AlbumManifest albumManifest = albumManager.getAlbumManifest(bi.getUuid(), bi.getBlItemNo());
                                              if (albumManifest.hasPrimaryPhoto()) {
                                                  PhotoMetaData photoMetaData = albumManifest.getPrimaryPhoto();
-                                                 if (photoMetaData.isChanged()) {
-                                                     Photo photo = photosInterface.getPhoto(photoMetaData.getPhotoId());
-                                                     Path scaledImagePath = imageScalingService.scale(new URL(photo.getMedium800Url()));
-                                                     bricklinkWebService.uploadInventoryImage(bi.getInventoryId(), scaledImagePath);
-                                                     log.info("Uploaded primary photo for [{}-{}] with photo [{}]", bi.getBlItemNo(), bi.getUuid(), scaledImagePath);
-                                                 } else {
-                                                     log.info("Primary photo for [{}-{}] not changed - no scaling or upload needed", bi.getBlItemNo(), bi.getUuid());
-                                                 }
+                                                 Photo photo = photosInterface.getPhoto(photoMetaData.getPhotoId());
+                                                 Path scaledImagePath = imageScalingService.scale(new URL(photo.getMedium800Url()));
+                                                 bricklinkWebService.uploadInventoryImage(bi.getInventoryId(), scaledImagePath);
+                                                 log.info("Uploaded primary photo for [{}-{}] with photo [{}]", bi.getBlItemNo(), bi.getUuid(), scaledImagePath);
                                              } else {
                                                  log.warn("No primary photo specified for [{}-{}]", bi.getBlItemNo(), bi.getUuid());
                                              }

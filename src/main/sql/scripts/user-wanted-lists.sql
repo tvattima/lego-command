@@ -1,0 +1,177 @@
+/* Creates bricklink user wanted list */
+select * from (
+select 'Jetflap' username,
+       bi.box_id,
+       i.item_number,
+       i.item_name,
+       bli.bl_item_number,
+       bi.uuid,
+       bi.inventory_id,
+       bi.unit_price,
+       bi.order_id,
+       bi.new_or_used,
+       bi.completeness,
+       bi.quantity,
+       bi.for_sale,
+       bi.is_stock_room,
+       bi.description
+from item i
+         join bricklink_item bli on bli.item_id = i.item_id
+         join bricklink_inventory bi on bi.bl_item_number = bli.bl_item_number
+where i.item_number in (
+                        '361',
+                        '542',
+                        '601',
+                        '603',
+                        '625',
+                        '948',
+                        '956',
+                        '1484',
+                        '1710',
+                        '1720',
+                        '1773',
+                        '1817',
+                        '1818',
+                        '1854',
+                        '2140',
+                        '2870',
+                        '5048',
+                        '5069',
+                        '5078',
+                        '5137',
+                        '5301',
+                        '5302',
+                        '5303',
+                        '5304',
+                        '5310',
+                        '5392',
+                        '5393',
+                        '6002',
+                        '6077',
+                        '6307',
+                        '6308',
+                        '6331',
+                        '6348',
+                        '6349',
+                        '6352',
+                        '6367',
+                        '6416',
+                        '6417',
+                        '6527',
+                        '6581',
+                        '6597',
+                        '6664',
+                        '6690',
+                        '8042',
+                        '8422',
+                        '8712',
+                        '8816',
+                        '8818',
+                        '8848',
+                        '8857',
+                        '8860',
+                        '8865'
+    )
+UNION
+select 'zetaberg' username,
+       bi.box_id,
+       i.item_number,
+       i.item_name,
+       bli.bl_item_number,
+       bi.uuid,
+       bi.inventory_id,
+       bi.unit_price,
+       bi.order_id,
+       bi.new_or_used,
+       bi.completeness,
+       bi.quantity,
+       bi.for_sale,
+       bi.is_stock_room,
+       bi.description
+from item i
+         join bricklink_item bli on bli.item_id = i.item_id
+         join bricklink_inventory bi on bi.bl_item_number = bli.bl_item_number
+where i.item_number in ('601',
+                        '623',
+                        '1773',
+                        '1876',
+                        '6335',
+                        '6377',
+                        '6378',
+                        '6380',
+                        '6385',
+                        '6387',
+                        '6394',
+                        '6395',
+                        '6396',
+                        '6399',
+                        '6440',
+                        '6540',
+                        '6542',
+                        '6597',
+                        '6603',
+                        '6657',
+                        '6671',
+                        '6678',
+                        '6687',
+                        '1489',
+                        '6640',
+                        '6430',
+                        '6354',
+                        '2532',
+                        '1818',
+                        '6679',
+                        '6592',
+                        '6581'
+    )
+UNION
+select 'johnnydiscopony' username,
+       bi.box_id,
+       i.item_number,
+       i.item_name,
+       bli.bl_item_number,
+       bi.uuid,
+       bi.inventory_id,
+       bi.unit_price,
+       bi.order_id,
+       bi.new_or_used,
+       bi.completeness,
+       bi.quantity,
+       bi.for_sale,
+       bi.is_stock_room,
+       bi.description
+from item i
+         join bricklink_item bli on bli.item_id = i.item_id
+         join bricklink_inventory bi on bi.bl_item_number = bli.bl_item_number
+where i.item_number in ('1489',
+                        '1818',
+                        '1773',
+                        '2998'
+    )
+
+UNION
+select 'LowLow' username,
+       bi.box_id,
+       i.item_number,
+       i.item_name,
+       bli.bl_item_number,
+       bi.uuid,
+       bi.inventory_id,
+       bi.unit_price,
+       bi.order_id,
+       bi.new_or_used,
+       bi.completeness,
+       bi.quantity,
+       bi.for_sale,
+       bi.is_stock_room,
+       bi.description
+from item i
+         join bricklink_item bli on bli.item_id = i.item_id
+         join bricklink_inventory bi on bi.bl_item_number = bli.bl_item_number
+where i.item_number in ('6375',
+                        '6371',
+                        '6628'
+    )
+order by username, box_id, bl_item_number) as user_list)
+from user_list ul
+where ul.order_id is null;

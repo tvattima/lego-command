@@ -35,7 +35,8 @@ logging:
    level:
       root: INFO
       com.bricklink: INFO
-      com.bricklink.api.rest.client: INFO
+      #set to DEBUG for Feign/Jackson debug logging
+      com.bricklink.api.rest.client: WARN
       com.bricklink.web.configuration: INFO
       net.bricklink.data: INFO
       net.bricklink.data.lego.ibatis.configuration: INFO
@@ -55,6 +56,7 @@ logging:
 
 bricklink:
    rest:
+      uri: https://api.bricklink.com/api/store/v1
       client-config-dir: C:\Users\tvatt\.credentials\bricklink
       client-config-file: bricklink-client-api-keys.json
    web:
