@@ -63,7 +63,7 @@ public class BricklinkCommand implements Runnable {
             ImageScalingService imageScalingService = parent.getImageScalingService();
             log.info("UpdatePhotosCommand");
 
-            bricklinkInventoryDao.getInventoryWork(true)
+            bricklinkInventoryDao.getInventoryWork()
                                  .parallelStream()
                                  .map(bi -> {
                                      AlbumManifest albumManifest = albumManager.getAlbumManifest(bi.getUuid(), bi.getBlItemNo());

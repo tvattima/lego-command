@@ -12,5 +12,5 @@ select bi.box_id,
 from bricklink_inventory bi
          left join `condition` ic on ic.condition_id = bi.instructions_condition_id
          left join `condition` bc on bc.condition_id = bi.box_condition_id
-where bi.box_id in (31)
+where bi.box_id in (10)
 order by bi.bl_item_number;

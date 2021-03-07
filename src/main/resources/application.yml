@@ -33,11 +33,11 @@ bitly:
 
 logging:
    level:
-      root: INFO
+      root: DEBUG
       com.bricklink: INFO
       #set to DEBUG for Feign/Jackson debug logging
       com.bricklink.api.rest.client: WARN
-      com.bricklink.web.configuration: INFO
+      com.bricklink.web.configuration: WARN
       net.bricklink.data: INFO
       net.bricklink.data.lego.ibatis.configuration: INFO
       net.bricklink.data.lego.dto: INFO

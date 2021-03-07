@@ -176,15 +176,11 @@ public class InventoryCommand implements Runnable {
 
             try {
                 List<String> itemsToInclude = new ArrayList<>();
-                //itemsToInclude.add("43051ec9b0c3a28f78e2646877e87cf0");
+//                itemsToInclude.add("dddfe2098a397da42f5880f86e143c90");
 
-                bricklinkInventoryDao.getInventoryWork(true)
+                bricklinkInventoryDao.getInventoryWork()
                                      .parallelStream()
                                      .filter(bi -> ((itemsToInclude.size() == 0) || (itemsToInclude.contains(bi.getUuid()) || itemsToInclude.contains(bi.getBlItemNo()))))
-                                     .filter(bi -> {
-                                         AlbumManifest albumManifest = albumManager.getAlbumManifest(bi.getUuid(), bi.getBlItemNo());
-                                         return albumManifest.hasPrimaryPhoto();
-                                     })
                                      .peek(bi -> {
                                          saleItemDescriptionBuilder.buildDescription(bi);
                                          bricklinkInventoryDao.update(bi);
