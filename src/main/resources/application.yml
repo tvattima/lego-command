@@ -33,26 +33,9 @@ bitly:
 
 logging:
    level:
-      root: DEBUG
-      com.bricklink: INFO
-      #set to DEBUG for Feign/Jackson debug logging
-      com.bricklink.api.rest.client: WARN
-      com.bricklink.web.configuration: WARN
-      net.bricklink.data: INFO
-      net.bricklink.data.lego.ibatis.configuration: INFO
-      net.bricklink.data.lego.dto: INFO
-      com.vattima.lego.data.ibatis.mapper: INFO
-      com.vattima.lego.imaging.flickr.configuration: INFO
-      com.vattima.lego.imaging.service.flickr: WARN
-      org.springframework.jdbc: WARN
-      org.mybatis: WARN
+      root: INFO
       org.apache.http: ERROR
       okhttp3: WARN
-      com.gargoylesoftware: ERROR
-      com.gargoylesoftware.htmlunit.javascript.StrictErrorReporter: OFF
-      com.zaxxer: WARN
-      feign: WARN
-      sun: WARN
 
 bricklink:
    rest:
