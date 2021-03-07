@@ -7,9 +7,9 @@ DROP PROCEDURE IF EXISTS add_inventory_from_index $$
 CREATE PROCEDURE add_inventory_from_index()
 BEGIN
     START TRANSACTION;
-    SET @item_number = '4558-1', @box_id = 31, @box_index = 1005, @bl_item_id = 4425;
-    SET @item_id = 116, @item_name = '', @number_of_pieces = 0, @issue_year = 0, @issue_location = '', @theme_id = null, @item_type_code = 'S', @notes = null;
-    SET @new_or_used = 'N', @completeness = 'S', @sealed = 1, @built_once = 0, @box_condition_id = 2, @instructions_condition_id = 1, @item_type = 'SET';
+    SET @item_number = 'kabspace-1', @box_id = 10, @box_index = 38, @bl_item_id = 40710;
+    SET @item_id = null, @item_name = 'Kabaya Space Port 4-Pack', @number_of_pieces = null, @issue_year = 1999, @issue_location = null, @theme_id = 8, @item_type_code = 'S', @notes = 'Combined 4-set Pack';
+    SET @new_or_used = 'N', @completeness = 'S', @sealed = 1, @built_once = 0, @box_condition_id = 1, @instructions_condition_id = 1, @item_type = 'SET';
     SET @extra_description = @notes;
     SET @bl_item_number = concat(@item_number, '');
     SET @uuid = md5(concat(@box_id, @box_index, @bl_item_number));
