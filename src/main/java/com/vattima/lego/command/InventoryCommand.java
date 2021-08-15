@@ -84,7 +84,7 @@ public class InventoryCommand implements Runnable {
                                  .forEach(bi -> {
                 count.incrementAndGet();
                 if (Optional.ofNullable(bi.getOrderId()).isPresent()) {
-                    log.warn("{} - Inventory Item is on order [{}] - skipping price calculation", logMessage(bi), bi.getOrderId());
+                    log.debug("{} - Inventory Item is on order [{}] - skipping price calculation", logMessage(bi), bi.getOrderId());
                 } else {
                     double price = Double.NaN;
                     try {
@@ -95,22 +95,28 @@ public class InventoryCommand implements Runnable {
                         log.error("{} - Error [{}]", logMessage(bi), e.getMessage());
                     }
                     if (Double.isNaN(price)) {
-                        log.warn("{} - could not compute price", logMessage(bi));
+                        // Message will already be logged, no need to log a second message --> log.warn("{} - could not compute price", logMessage(bi));
                     } else if (Optional.ofNullable(bi.getFixedPrice())
                                        .orElse(false)) {
                         log.warn("{} - has fixed price [{}] - not using computed price [{}]", logMessage(bi), bi.getUnitPrice(), price);
                     } else {
-                        log.info("{} - ${}", logMessage(bi), price);
+                        logPriceIfChangingMoreThan(bi, price, 5.0d);
                         bricklinkInventoryDao.setPrice(bi.getBlInventoryId(), price);
                     }
                 }
             });
             log.info("Final cumulative value of [{}] items for sale = [{}]", count.get(), value.doubleValue());
         }
+
+        private void logPriceIfChangingMoreThan(BricklinkInventory bi, double price, double delta) {
+            if ((bi.getForSale()) & (Math.abs(bi.getUnitPrice()-price) > delta)) {
+                log.info(String.format("%s - New Price: [%7.2f]", logMessage(bi), price));
+            }
+        }
     }
 
     private static String logMessage(BricklinkInventory bi) {
-        return String.format("[Box[%s] %s %s %s %s]", bi.getBoxId(), bi.getNewOrUsed(), bi.getCompleteness(), bi.getBlItemNo(), bi.getItemName());
+        return String.format("[Box[%s] %s %s %s %s :: Price:[%7.2f] ]", bi.getBoxId(), bi.getNewOrUsed(), bi.getCompleteness(), bi.getBlItemNo(), bi.getItemName(), bi.getUnitPrice());
     }
 
     @CommandLine.Command(name = "set-not-for-sale", aliases = {"-snfs"}, description = "Updates all bricklink Inventories that are in Bricklink's Train Categories to be Not for Sale")

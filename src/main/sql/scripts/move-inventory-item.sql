@@ -104,4 +104,8 @@ END $$
 
 DELIMITER ;
 
+-- old_box_id
+-- old_box_index
+-- new_box_id
+-- item_number from inventory_index table
 CALL move_inventory_item(27, 16, 25, '1254');
