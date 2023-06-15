@@ -7,12 +7,37 @@ DROP PROCEDURE IF EXISTS add_inventory_from_index $$
 CREATE PROCEDURE add_inventory_from_index()
 BEGIN
     START TRANSACTION;
-    SET @item_number = 'kabspace-1', @box_id = 10, @box_index = 38, @bl_item_id = 40710;
-    SET @item_id = null, @item_name = 'Kabaya Space Port 4-Pack', @number_of_pieces = null, @issue_year = 1999, @issue_location = null, @theme_id = 8, @item_type_code = 'S', @notes = 'Combined 4-set Pack';
-    SET @new_or_used = 'N', @completeness = 'S', @sealed = 1, @built_once = 0, @box_condition_id = 1, @instructions_condition_id = 1, @item_type = 'SET';
+    SET @item_number = '10308', @box_id = 39, @box_index = 61, @bl_item_id = 218576;
+    SET @item_id = null, @item_name = 'Holiday Main Street', @number_of_pieces = 1490, @issue_year = 2022, @issue_location = null, @theme_id = 57, @item_type_code = 'S', @notes = null;
+    SET @new_or_used = 'N', @completeness = 'C', @sealed = false, @built_once = 1, @box_condition_id = 1, @instructions_condition_id = 1, @item_type = 'SET';
+    SET @forSale = false;
     SET @extra_description = @notes;
-    SET @bl_item_number = concat(@item_number, '');
+    SET @bl_item_number = concat(@item_number, '-1');
     SET @uuid = md5(concat(@box_id, @box_index, @bl_item_number));
+
+    # get current inventory_index information
+    SELECT 1,
+           ii.box_name,
+           ii.box_number,
+           ii.sealed,
+           ii.quantity,
+           ii.description,
+           ii.active,
+           ii.moved_to_box_id
+    INTO @found,
+        @box_name,
+        @box_number,
+        @sealed,
+        @quantity,
+        @desc,
+        @active,
+        @moved_to_box_index
+    FROM inventory_index ii
+    WHERE ii.box_id = @box_id
+      AND   ii.box_index = @box_index;
+    if @found != 1 THEN
+        SIGNAL SQLSTATE '99001' SET MESSAGE_TEXT = 'Could not find box_id/box_index';
+    end if;
 
     IF isnull(@item_id) THEN
         insert into item (item_number, item_name, number_of_pieces, issue_year, issue_location, theme_id,
@@ -91,10 +116,10 @@ BEGIN
            null                       tier_price2,
            null                       tier_price3,
            null                       my_weight,
-           @sealed                    sealed,
+           if(@sealed,1,0)            sealed,
            null                       order_id,
            0                          fixed_price,
-           1                          for_sale,
+           if(@forSale,1,0)           for_sale,
            @built_once                built_once,
            @box_condition_id          box_condition_id,
            @instructions_condition_id instructions_condition_id,

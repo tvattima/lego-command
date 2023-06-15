@@ -8,7 +8,8 @@ CREATE PROCEDURE move_inventory_item(
  IN old_box_id INT,
  IN old_box_index INT,
  IN new_box_id INT,
- IN item_number VARCHAR(10)
+ IN item_number VARCHAR(10),
+ IN dup_check INT
 )
 BEGIN
     START TRANSACTION;
@@ -23,7 +24,7 @@ BEGIN
     FROM inventory_index ii
     WHERE ii.box_id = new_box_id
     AND   ii.item_number = item_number;
-    if @found = 1 THEN
+    if ((@found = 1) AND (dup_check = 1)) THEN
         SET @msg = CONCAT('Item [',item_number,'] already exists in box [',new_box_id,'] with index [',@current_box_index_id,']');
         SIGNAL SQLSTATE '99001' SET MESSAGE_TEXT = @msg;
     end if;
@@ -108,4 +109,5 @@ DELIMITER ;
 -- old_box_index
 -- new_box_id
 -- item_number from inventory_index table
-CALL move_inventory_item(27, 16, 25, '1254');
+CALL move_inventory_item(35, 108, 4, '30222-1', 1);
+
