@@ -1155,9 +1155,9 @@ public class CommandLine {
     }
     private static List<Object> execute(CommandLine parsed, List<Object> executionResult) {
         Object command = parsed.getCommand();
-        if (command instanceof Runnable) {
+        if (command instanceof Runnable runnable) {
             try {
-                ((Runnable) command).run();
+                runnable.run();
                 executionResult.add(null); // for compatibility with picocli 2.x
                 return executionResult;
             } catch (ParameterException ex) {
@@ -1167,9 +1167,8 @@ public class CommandLine {
             } catch (Exception ex) {
                 throw new ExecutionException(parsed, "Error while running command (" + command + "): " + ex, ex);
             }
-        } else if (command instanceof Callable) {
+        } else if (command instanceof Callable callable) {
             try {
-                @SuppressWarnings("unchecked") Callable<Object> callable = (Callable<Object>) command;
                 executionResult.add(callable.call());
                 return executionResult;
             } catch (ParameterException ex) {
@@ -1179,19 +1178,19 @@ public class CommandLine {
             } catch (Exception ex) {
                 throw new ExecutionException(parsed, "Error while calling command (" + command + "): " + ex, ex);
             }
-        } else if (command instanceof Method) {
+        } else if (command instanceof Method method) {
             try {
-                if (Modifier.isStatic(((Method) command).getModifiers())) {
+                if (Modifier.isStatic(method.getModifiers())) {
                     // invoke static method
-                    executionResult.add(((Method) command).invoke(null, parsed.getCommandSpec().argValues()));
+                    executionResult.add(method.invoke(null, parsed.getCommandSpec().argValues()));
                     return executionResult;
                 } else if (parsed.getCommandSpec().parent() != null) {
-                    executionResult.add(((Method) command).invoke(parsed.getCommandSpec().parent().userObject(), parsed.getCommandSpec().argValues()));
+                    executionResult.add(method.invoke(parsed.getCommandSpec().parent().userObject(), parsed.getCommandSpec().argValues()));
                     return executionResult;
                 } else {
-                    for (Constructor<?> constructor : ((Method) command).getDeclaringClass().getDeclaredConstructors()) {
+                    for (Constructor<?> constructor : method.getDeclaringClass().getDeclaredConstructors()) {
                         if (constructor.getParameterTypes().length == 0) {
-                            executionResult.add(((Method) command).invoke(constructor.newInstance(), parsed.getCommandSpec().argValues()));
+                            executionResult.add(method.invoke(constructor.newInstance(), parsed.getCommandSpec().argValues()));
                             return executionResult;
                         }
                     }
@@ -1199,10 +1198,10 @@ public class CommandLine {
                 }
             } catch (InvocationTargetException ex) {
                 Throwable t = ex.getTargetException();
-                if (t instanceof ParameterException) {
-                    throw (ParameterException) t;
-                } else if (t instanceof ExecutionException) {
-                    throw (ExecutionException) t;
+                if (t instanceof ParameterException exception) {
+                    throw exception;
+                } else if (t instanceof ExecutionException exception) {
+                    throw exception;
                 } else {
                     throw new ExecutionException(parsed, "Error while calling command (" + command + "): " + t, t);
                 }
@@ -1531,7 +1530,7 @@ public class CommandLine {
         }
     }
     static String versionString() {
-        return String.format("%s, JVM: %s (%s %s %s), OS: %s %s %s", VERSION,
+        return "%s, JVM: %s (%s %s %s), OS: %s %s %s".formatted(VERSION,
                 System.getProperty("java.version"), System.getProperty("java.vendor"), System.getProperty("java.vm.name"), System.getProperty("java.vm.version"),
                 System.getProperty("os.name"), System.getProperty("os.version"), System.getProperty("os.arch"));
     }
@@ -2385,15 +2384,17 @@ public class CommandLine {
     private static boolean empty(Object[] array) { return array == null || array.length == 0; }
     private static String str(String[] arr, int i) { return (arr == null || arr.length <= i) ? "" : arr[i]; }
     private static boolean isBoolean(Class<?> type) { return type == Boolean.class || type == Boolean.TYPE; }
-    private static CommandLine toCommandLine(Object obj, IFactory factory) { return obj instanceof CommandLine ? (CommandLine) obj : new CommandLine(obj, factory);}
+    private static CommandLine toCommandLine(Object obj, IFactory factory) { return obj instanceof CommandLine cl ? cl : new CommandLine(obj, factory);}
     private static boolean isMultiValue(Class<?> cls) { return cls.isArray() || Collection.class.isAssignableFrom(cls) || Map.class.isAssignableFrom(cls); }
     private static String format(String formatString, Object... params) {
         try {
-            return formatString == null ? "" : String.format(formatString, params);
+            return formatString == null ? "" : formatString.formatted(params);
         } catch (IllegalFormatException ex) {
-            new Tracer().warn("Could not format '%s' (Underlying error: %s). " +
-                    "Using raw String: '%%n' format strings have not been replaced with newlines. " +
-                    "Please ensure to escape '%%' characters with another '%%'.%n", formatString, ex.getMessage());
+            new Tracer().warn("""
+                    Could not format '%s' (Underlying error: %s). \
+                    Using raw String: '%%n' format strings have not been replaced with newlines. \
+                    Please ensure to escape '%%' characters with another '%%'.%n\
+                    """, formatString, ex.getMessage());
             return formatString;
         }
     }
@@ -3423,7 +3424,7 @@ public class CommandLine {
     private static class DefaultFactory implements IFactory {
         public <T> T create(Class<T> cls) throws Exception {
             try {
-                return cls.newInstance();
+                return cls.getDeclaredConstructor().newInstance();
             } catch (Exception ex) {
                 Constructor<T> constructor = cls.getDeclaredConstructor();
                 constructor.setAccessible(true);
@@ -3801,10 +3802,10 @@ public class CommandLine {
                 String wrongType = "Non-boolean options like %s should not be marked as '%s=true'. Usually a command has one %s boolean flag that triggers display of the %s. Alternatively, consider using @Command(mixinStandardHelpOptions = true) on your command instead.";
                 String multiple = "Multiple options %s are marked as '%s=true'. Usually a command has only one %s option that triggers display of the %s. Alternatively, consider using @Command(mixinStandardHelpOptions = true) on your command instead.%n";
                 if (!wrongUsageHelpAttr.isEmpty()) {
-                    throw new InitializationException(String.format(wrongType, wrongUsageHelpAttr, "usageHelp", "--help", "usage help message"));
+                    throw new InitializationException(wrongType.formatted(wrongUsageHelpAttr, "usageHelp", "--help", "usage help message"));
                 }
                 if (!wrongVersionHelpAttr.isEmpty()) {
-                    throw new InitializationException(String.format(wrongType, wrongVersionHelpAttr, "versionHelp", "--version", "version information"));
+                    throw new InitializationException(wrongType.formatted(wrongVersionHelpAttr, "versionHelp", "--version", "version information"));
                 }
                 if (usageHelpAttr.size() > 1)   { new Tracer().warn(multiple, usageHelpAttr, "usageHelp", "--help", "usage help message"); }
                 if (versionHelpAttr.size() > 1) { new Tracer().warn(multiple, versionHelpAttr, "versionHelp", "--version", "version information"); }
@@ -4462,21 +4463,7 @@ public class CommandLine {
 
             private IHelpFactory helpFactory;
 
-            private List<String> sectionKeys = Collections.unmodifiableList(Arrays.asList(
-                    SECTION_KEY_HEADER_HEADING,
-                    SECTION_KEY_HEADER,
-                    SECTION_KEY_SYNOPSIS_HEADING,
-                    SECTION_KEY_SYNOPSIS,
-                    SECTION_KEY_DESCRIPTION_HEADING,
-                    SECTION_KEY_DESCRIPTION,
-                    SECTION_KEY_PARAMETER_LIST_HEADING,
-                    SECTION_KEY_PARAMETER_LIST,
-                    SECTION_KEY_OPTION_LIST_HEADING,
-                    SECTION_KEY_OPTION_LIST,
-                    SECTION_KEY_COMMAND_LIST_HEADING,
-                    SECTION_KEY_COMMAND_LIST,
-                    SECTION_KEY_FOOTER_HEADING,
-                    SECTION_KEY_FOOTER));
+            private List<String> sectionKeys = List.of(SECTION_KEY_HEADER_HEADING, SECTION_KEY_HEADER, SECTION_KEY_SYNOPSIS_HEADING, SECTION_KEY_SYNOPSIS, SECTION_KEY_DESCRIPTION_HEADING, SECTION_KEY_DESCRIPTION, SECTION_KEY_PARAMETER_LIST_HEADING, SECTION_KEY_PARAMETER_LIST, SECTION_KEY_OPTION_LIST_HEADING, SECTION_KEY_OPTION_LIST, SECTION_KEY_COMMAND_LIST_HEADING, SECTION_KEY_COMMAND_LIST, SECTION_KEY_FOOTER_HEADING, SECTION_KEY_FOOTER);
 
             private Map<String, IHelpSectionRenderer> helpSectionRendererMap = createHelpSectionRendererMap();
 
@@ -4983,11 +4970,13 @@ public class CommandLine {
             void initSeparator(String value)   { if (initializable(separator, value, DEFAULT_SEPARATOR)) {separator = value;} }
             void updateSeparator(String value) { if (isNonDefault(value, DEFAULT_SEPARATOR))             {separator = value;} }
             public String toString() {
-                return String.format("posixClusteredShortOptionsAllowed=%s, stopAtPositional=%s, stopAtUnmatched=%s, " +
-                                "separator=%s, overwrittenOptionsAllowed=%s, unmatchedArgumentsAllowed=%s, expandAtFiles=%s, " +
-                                "atFileCommentChar=%s, useSimplifiedAtFiles=%s, endOfOptionsDelimiter=%s, limitSplit=%s, aritySatisfiedByAttachedOptionParam=%s, " +
-                                "toggleBooleanFlags=%s, unmatchedOptionsArePositionalParams=%s, collectErrors=%s," +
-                                "caseInsensitiveEnumValuesAllowed=%s, trimQuotes=%s, splitQuotedStrings=%s",
+                return ("""
+                        posixClusteredShortOptionsAllowed=%s, stopAtPositional=%s, stopAtUnmatched=%s, \
+                        separator=%s, overwrittenOptionsAllowed=%s, unmatchedArgumentsAllowed=%s, expandAtFiles=%s, \
+                        atFileCommentChar=%s, useSimplifiedAtFiles=%s, endOfOptionsDelimiter=%s, limitSplit=%s, aritySatisfiedByAttachedOptionParam=%s, \
+                        toggleBooleanFlags=%s, unmatchedOptionsArePositionalParams=%s, collectErrors=%s,\
+                        caseInsensitiveEnumValuesAllowed=%s, trimQuotes=%s, splitQuotedStrings=%s\
+                        """).formatted(
                         posixClusteredShortOptionsAllowed, stopAtPositional, stopAtUnmatched,
                         separator, overwrittenOptionsAllowed, unmatchedArgumentsAllowed, expandAtFiles,
                         atFileCommentChar, useSimplifiedAtFiles, endOfOptionsDelimiter, limitSplit, aritySatisfiedByAttachedOptionParam,
@@ -6043,7 +6032,7 @@ public class CommandLine {
                     try {
                         setter.set(unmatched);
                     } catch (Exception ex) {
-                        throw new PicocliException(String.format("Could not invoke setter (%s) with unmatched argument array '%s': %s", setter, Arrays.toString(unmatched), ex), ex);
+                        throw new PicocliException("Could not invoke setter (%s) with unmatched argument array '%s': %s".formatted(setter, Arrays.toString(unmatched), ex), ex);
                     }
                 }
                 if (getter != null) {
@@ -6052,7 +6041,7 @@ public class CommandLine {
                         Assert.notNull(collection, "getter returned null Collection");
                         collection.addAll(Arrays.asList(unmatched));
                     } catch (Exception ex) {
-                        throw new PicocliException(String.format("Could not add unmatched argument array '%s' to collection returned by getter (%s): %s",
+                        throw new PicocliException("Could not add unmatched argument array '%s' to collection returned by getter (%s): %s".formatted(
                                 Arrays.toString(unmatched), getter, ex), ex);
                     }
                 }
@@ -6206,7 +6195,7 @@ public class CommandLine {
             Class<?> getType()       { return type; }
             Type getGenericType()    { return genericType; }
             public String toString() { return accessible.toString(); }
-            String toGenericString() { return accessible instanceof Field ? ((Field) accessible).toGenericString() : accessible instanceof Method ? ((Method) accessible).toGenericString() : ((MethodParam)accessible).toString(); }
+            String toGenericString() { return accessible instanceof Field f ? f.toGenericString() : accessible instanceof Method m ? m.toGenericString() : ((MethodParam)accessible).toString(); }
             boolean isMethodParameter() { return accessible instanceof MethodParam; }
             String mixinName()    {
                 String annotationName = getAnnotation(Mixin.class).name();
@@ -6362,11 +6351,11 @@ public class CommandLine {
                 Class<?> cls = command.getClass();
                 Tracer t = new Tracer();
                 t.debug("Creating CommandSpec for object of class %s with factory %s%n", cls.getName(), factory.getClass().getName());
-                if (command instanceof CommandSpec) { return (CommandSpec) command; }
+                if (command instanceof CommandSpec spec) { return spec; }
                 Object instance = command;
                 String commandClassName = cls.getName();
-                if (command instanceof Class) {
-                    cls = (Class) command;
+                if (command instanceof Class class1) {
+                    cls = class1;
                     commandClassName = cls.getName();
                     try {
                         t.debug("Getting a %s instance from the factory%n", cls.getName());
@@ -6402,15 +6391,14 @@ public class CommandLine {
                     }
                 }
                 result.mixinStandardHelpOptions(mixinStandardHelpOptions); //#377 Standard help options should be added last
-                if (command instanceof Method) {
-                    Method method = (Method) command;
+                if (command instanceof Method method) {
                     t.debug("Using method %s as command %n", method);
                     commandClassName = method.toString();
                     hasCommandAnnotation |= updateCommandAttributes(method, result, factory);
                     result.mixinStandardHelpOptions(method.getAnnotation(Command.class).mixinStandardHelpOptions());
                     initFromMethodParameters(instance, method, result, factory);
                     // set command name to method name, unless @Command#name is set
-                    result.initName(((Method)command).getName());
+                    result.initName(method.getName());
                 }
                 result.updateArgSpecMessages();
 
@@ -6734,20 +6722,17 @@ public class CommandLine {
                 if (annotationTypes.length > 0) { return annotationTypes; }
                 if (propertyType.isArray()) { return new Class<?>[] { propertyType.getComponentType() }; }
                 if (CommandLine.isMultiValue(propertyType)) {
-                    if (genericType instanceof ParameterizedType) {// e.g. Map<Long, ? extends Number>
-                        ParameterizedType parameterizedType = (ParameterizedType) genericType;
+                    if (genericType instanceof ParameterizedType parameterizedType) {
                         Type[] paramTypes = parameterizedType.getActualTypeArguments(); // e.g. ? extends Number
                         Class<?>[] result = new Class<?>[paramTypes.length];
                         for (int i = 0; i < paramTypes.length; i++) {
-                            if (paramTypes[i] instanceof Class) { result[i] = (Class<?>) paramTypes[i]; continue; } // e.g. Long
-                            else if (paramTypes[i] instanceof WildcardType) { // e.g. ? extends Number
-                                WildcardType wildcardType = (WildcardType) paramTypes[i];
+                            if (paramTypes[i] instanceof Class class1) { result[i] = class1; continue; } // e.g. Long
+                            else if (paramTypes[i] instanceof WildcardType wildcardType) {
                                 Type[] lower = wildcardType.getLowerBounds(); // e.g. []
-                                if (lower.length > 0 && lower[0] instanceof Class) { result[i] = (Class<?>) lower[0]; continue; }
+                                if (lower.length > 0 && lower[0] instanceof Class class1) { result[i] = class1; continue; }
                                 Type[] upper = wildcardType.getUpperBounds(); // e.g. Number
-                                if (upper.length > 0 && upper[0] instanceof Class) { result[i] = (Class<?>) upper[0]; continue; }
-                            } else if (paramTypes[i] instanceof GenericArrayType) {
-                                GenericArrayType gat = (GenericArrayType) paramTypes[i];
+                                if (upper.length > 0 && upper[0] instanceof Class class1) { result[i] = class1; continue; }
+                            } else if (paramTypes[i] instanceof GenericArrayType gat) {
                                 if (char.class.equals(gat.getGenericComponentType())) {
                                     result[i] = char[].class; continue;
                                 }
@@ -7838,8 +7823,8 @@ public class CommandLine {
             }
             initialized.add(argSpec);
             for (Object obj : converted) {
-                if (obj instanceof Collection<?>) {
-                    newValues.addAll((Collection<?>) obj);
+                if (obj instanceof Collection<?> collection) {
+                    newValues.addAll(collection);
                 } else {
                     newValues.add(obj);
                 }
@@ -7870,8 +7855,8 @@ public class CommandLine {
             }
             initialized.add(argSpec);
             for (Object element : converted) {
-                if (element instanceof Collection<?>) {
-                    collection.addAll((Collection<?>) element);
+                if (element instanceof Collection<?> collection1) {
+                    collection.addAll(collection1);
                 } else {
                     collection.add(element);
                 }
@@ -8034,11 +8019,11 @@ public class CommandLine {
             try {
                 return converter.convert(value);
             } catch (TypeConversionException ex) {
-                String msg = String.format("Invalid value for %s: %s", optionDescription("", argSpec, index), ex.getMessage());
+                String msg = "Invalid value for %s: %s".formatted(optionDescription("", argSpec, index), ex.getMessage());
                 throw new ParameterException(CommandLine.this, msg, argSpec, value);
             } catch (Exception other) {
                 String desc = optionDescription("", argSpec, index);
-                String msg = String.format("Invalid value for %s: cannot convert '%s' to %s (%s)", desc, value, type.getSimpleName(), other);
+                String msg = "Invalid value for %s: cannot convert '%s' to %s (%s)".formatted(desc, value, type.getSimpleName(), other);
                 throw new ParameterException(CommandLine.this, msg, other, argSpec, value);
             }
         }
@@ -8125,7 +8110,7 @@ public class CommandLine {
                             String[] names = new String[constants.length];
                             for (int i = 0; i < names.length; i++) { names[i] = constants[i].name(); }
                             throw new TypeConversionException(
-                                    String.format("expected one of %s (%s) but was '%s'", Arrays.asList(names), sensitivity, value)); }
+                                    "expected one of %s (%s) but was '%s'".formatted(Arrays.asList(names), sensitivity, value)); }
                     }
                 };
             }
@@ -8189,7 +8174,7 @@ public class CommandLine {
 
         char[] readPassword(ArgSpec argSpec) {
             String name = argSpec.isOption() ? ((OptionSpec) argSpec).longestName() : "position " + position;
-            String prompt = String.format("Enter value for %s (%s): ", name, str(argSpec.renderedDescription(), 0));
+            String prompt = "Enter value for %s (%s): ".formatted(name, str(argSpec.renderedDescription(), 0));
             if (tracer.isDebug()) {tracer.debug("Reading value for %s from console...%n", name);}
             char[] result = readPassword(prompt);
             if (tracer.isDebug()) {tracer.debug("User entered %d characters for %s.%n", result.length, name);}
@@ -8258,7 +8243,7 @@ public class CommandLine {
         }
         private static TypeConversionException fail(String value, Class<?> c) { return fail(value, c, "'%s' is not a %s"); }
         private static TypeConversionException fail(String value, Class<?> c, String template) {
-            return new TypeConversionException(String.format(template, value, c.getSimpleName()));
+            return new TypeConversionException(template.formatted(value, c.getSimpleName()));
         }
         /** Converts text to a {@code Byte} by delegating to {@link Byte#valueOf(String)}.*/
         static class ByteConverter implements ITypeConverter<Byte> {
@@ -8440,9 +8425,9 @@ public class CommandLine {
                         return method.invoke(null, s);
                     }
                 } catch (InvocationTargetException e) {
-                    throw new TypeConversionException(String.format("cannot convert '%s' to %s (%s)", s, method.getReturnType(), e.getTargetException()));
+                    throw new TypeConversionException("cannot convert '%s' to %s (%s)".formatted(s, method.getReturnType(), e.getTargetException()));
                 } catch (Exception e) {
-                    throw new TypeConversionException(String.format("Internal error converting '%s' to %s (%s)", s, method.getReturnType(), e));
+                    throw new TypeConversionException("Internal error converting '%s' to %s (%s)".formatted(s, method.getReturnType(), e));
                 }
             }
         }
@@ -10326,7 +10311,7 @@ public class CommandLine {
                         this.color = Integer.decode(color);
                     }
                 }
-                public String on() { return String.format(CSI + "%d;5;%dm", fgbg, color); }
+                public String on() { return (CSI + "%d;5;%dm").formatted(fgbg, color); }
                 public String off() { return CSI + (fgbg + 1) + "m"; }
             }
             private static class StyledSection {
@@ -10839,7 +10824,7 @@ public class CommandLine {
         /** Returns {@code true} and prints suggested solutions to the specified stream if such solutions exist, otherwise returns {@code false}.
          * @since 3.3.0 */
         public static boolean printSuggestions(ParameterException ex, PrintStream out) {
-            return ex instanceof UnmatchedArgumentException && ((UnmatchedArgumentException) ex).printSuggestions(out);
+            return ex instanceof UnmatchedArgumentException uae && uae.printSuggestions(out);
         }
         /** Returns the unmatched command line arguments.
          * @since 3.3.0 */
