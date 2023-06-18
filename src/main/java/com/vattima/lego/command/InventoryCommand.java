@@ -72,7 +72,7 @@ public class InventoryCommand implements Runnable {
         @Override
         public void run() {
             List<String> itemsToInclude = new ArrayList<>();
-            //itemsToInclude.add("70c5e1177697513b55d3017090ce83a7");
+            //itemsToInclude.add("3e54c082348925603b06845060c9c80d");
 
             BricklinkInventoryDao bricklinkInventoryDao = parent.getBricklinkInventoryDao();
             PriceCalculatorService priceCalculatorService = parent.getPriceCalculatorService();
@@ -110,13 +110,13 @@ public class InventoryCommand implements Runnable {
 
         private void logPriceIfChangingMoreThan(BricklinkInventory bi, double price, double delta) {
             if ((bi.getForSale()) & (Math.abs(bi.getUnitPrice()-price) > delta)) {
-                log.info(String.format("%s - New Price: [%7.2f]", logMessage(bi), price));
+                log.info("%s - New Price: [%7.2f]".formatted(logMessage(bi), price));
             }
         }
     }
 
     private static String logMessage(BricklinkInventory bi) {
-        return String.format("[Box[%s] %s %s %s %s :: Price:[%7.2f] ]", bi.getBoxId(), bi.getNewOrUsed(), bi.getCompleteness(), bi.getBlItemNo(), bi.getItemName(), bi.getUnitPrice());
+        return "[Box[%s] %s %s %s %s :: Price:[%7.2f] ]".formatted(bi.getBoxId(), bi.getNewOrUsed(), bi.getCompleteness(), bi.getBlItemNo(), bi.getItemName(), bi.getUnitPrice());
     }
 
     @CommandLine.Command(name = "set-not-for-sale", aliases = {"-snfs"}, description = "Updates all bricklink Inventories that are in Bricklink's Train Categories to be Not for Sale")
@@ -174,18 +174,18 @@ public class InventoryCommand implements Runnable {
             BricklinkResource<List<Order>> filedOrders = bricklinkRestClient.getOrders(new ParamsBuilder().of("direction", "in").of("filed", true).get());
             BricklinkResource<List<Order>> notFiledOrders = bricklinkRestClient.getOrders(new ParamsBuilder().of("direction", "in").of("filed", false).get());
             Stream<Order> allOrdersStream = Stream.concat(filedOrders.getData().stream(), notFiledOrders.getData().stream());
-            allOrdersStream.filter(o -> !o.getStatus()
-                                          .equalsIgnoreCase("CANCELLED"))
-                           .forEach(o -> {
-                inventoryService.updateInventoryItemsOnOrder(o.getOrder_id());
-            });
+//            allOrdersStream.filter(o -> !o.getStatus()
+//                                          .equalsIgnoreCase("CANCELLED"))
+//                           .forEach(o -> {
+//                inventoryService.updateInventoryItemsOnOrder(o.getOrder_id());
+//            });
 
             try {
                 List<String> itemsToInclude = new ArrayList<>();
-//                itemsToInclude.add("dddfe2098a397da42f5880f86e143c90");
+                //itemsToInclude.add("c6d3e3bb204751875c1fca3aef15cb85");
 
                 bricklinkInventoryDao.getInventoryWork()
-                                     .parallelStream()
+                                     .stream()
                                      .filter(bi -> ((itemsToInclude.size() == 0) || (itemsToInclude.contains(bi.getUuid()) || itemsToInclude.contains(bi.getBlItemNo()))))
                                      .peek(bi -> {
                                          saleItemDescriptionBuilder.buildDescription(bi);

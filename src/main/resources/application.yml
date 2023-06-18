@@ -10,16 +10,17 @@ spring:
       client-config-file: site5-database-configuration.json
       database-key-name: site5-lego-dev
       hikari:
-         connection-timeout: 10000
-         idle-timeout: 30000
+         connection-timeout: 180000
+         idle-timeout: 60000
          connection-test-query: SELECT 1
-         initialization-fail-timeout: 10000
+         initialization-fail-timeout: 60000
          auto-commit: false
-         login-timeout: 10000
-         minimum-idle: 5
-         maximum-pool-size: 5
-         validation-timeout: 10000
+         login-timeout: 60000
+         minimum-idle: 40
+         maximum-pool-size: 40
+         validation-timeout: 60000
          pool-name: site5-mysql-jdbc-pool
+         max-lifetime: 10000
 
 lego:
    imaging:
