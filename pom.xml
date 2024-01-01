@@ -5,25 +5,25 @@
   <parent>
     <groupId>org.springframework.boot</groupId>
     <artifactId>spring-boot-starter-parent</artifactId>
-    <version>2.7.12</version>
+    <version>3.2.1</version>
     <relativePath/> <!-- lookup parent from repository -->
   </parent>
   <groupId>com.vattima.lego.command</groupId>
   <artifactId>lego-command</artifactId>
-  <version>1.1.0-SNAPSHOT</version>
+  <version>1.2.0-SNAPSHOT</version>
   <name>Lego :: Commands</name>
   <description>Lego CLI</description>
 
   <properties>
     <java.version>17</java.version>
-    <bricklink-inventory.version>1.1.0-SNAPSHOT</bricklink-inventory.version>
-    <bricklink-data.version>1.1.0-SNAPSHOT</bricklink-data.version>
-    <bricklink-rest.version>1.1.0-SNAPSHOT</bricklink-rest.version>
-    <bricklink-fulfillment.version>1.1.0-SNAPSHOT</bricklink-fulfillment.version>
-    <lego-imaging.version>1.1.0-SNAPSHOT</lego-imaging.version>
-    <lombok.version>1.18.28</lombok.version>
+    <bricklink-inventory.version>1.2.0-SNAPSHOT</bricklink-inventory.version>
+    <bricklink-data.version>1.2.0-SNAPSHOT</bricklink-data.version>
+    <bricklink-rest.version>1.2.0-SNAPSHOT</bricklink-rest.version>
+    <bricklink-fulfillment.version>1.2.0-SNAPSHOT</bricklink-fulfillment.version>
+    <lego-imaging.version>1.2.0-SNAPSHOT</lego-imaging.version>
+    <lombok.version>1.18.30</lombok.version>
     <maven-compiler-plugin.version>3.8.1</maven-compiler-plugin.version>
-    <mybatis-spring-boot-starter.version>2.1.4</mybatis-spring-boot-starter.version>
+    <mybatis-spring-boot-starter.version>3.0.3</mybatis-spring-boot-starter.version>
   </properties>
 
   <dependencies>
@@ -125,19 +125,19 @@
       <plugin>
         <groupId>org.openrewrite.maven</groupId>
         <artifactId>rewrite-maven-plugin</artifactId>
-        <version>4.46.0</version>
+        <version>5.17.1</version>
         <configuration>
           <activeRecipes>
-            <recipe>org.openrewrite.java.spring.boot2.UpgradeSpringBoot_2_7</recipe>
-            <recipe>org.openrewrite.java.migrate.UpgradeToJava17</recipe>
-            <recipe>org.openrewrite.java.spring.boot2.SpringBoot2JUnit4to5Migration</recipe>
+            <recipe>org.openrewrite.java.spring.boot3.UpgradeSpringBoot_3_0</recipe>
+            <recipe>org.openrewrite.java.spring.boot3.UpgradeSpringBoot_3_1</recipe>
+            <recipe>org.openrewrite.java.spring.boot3.UpgradeSpringBoot_3_2</recipe>
           </activeRecipes>
         </configuration>
         <dependencies>
           <dependency>
             <groupId>org.openrewrite.recipe</groupId>
             <artifactId>rewrite-spring</artifactId>
-            <version>4.36.0</version>
+            <version>5.1.7</version>
           </dependency>
         </dependencies>
       </plugin>

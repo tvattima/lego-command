@@ -1,3 +1,9 @@
+-- box_id,box_index,item_number,box_name,box_number,sealed,quantity,description
+-- 25,1002,40593,Box 25,Box 25,true,1,Fun Creativity 12-in-1 --- 229400
+-- 25,1003,40642,Box 25,Box 25,true,1,Gingerbread Ornaments --- 229751
+-- 25,1004,60381,Box 25,Box 25,true,1,Advent Calendar 2023 --- 227986
+
+
 /* Script to pull over a given box_id/box_index from inventory_index originally inventoried by Denise */
 /* item must exist */
 /* must know bl_item_id */
@@ -7,8 +13,8 @@ DROP PROCEDURE IF EXISTS add_inventory_from_index $$
 CREATE PROCEDURE add_inventory_from_index()
 BEGIN
     START TRANSACTION;
-    SET @item_number = '10308', @box_id = 39, @box_index = 61, @bl_item_id = 218576;
-    SET @item_id = null, @item_name = 'Holiday Main Street', @number_of_pieces = 1490, @issue_year = 2022, @issue_location = null, @theme_id = 57, @item_type_code = 'S', @notes = null;
+    SET @item_number = '60381', @box_id = 25, @box_index = 1004, @bl_item_id = 227986;
+    SET @item_id = null, @item_name = 'Advent Calendar 2023, City', @number_of_pieces = 0, @issue_year = 2023, @issue_location = null, @theme_id = 46, @item_type_code = 'S', @notes = null;
     SET @new_or_used = 'N', @completeness = 'C', @sealed = false, @built_once = 1, @box_condition_id = 1, @instructions_condition_id = 1, @item_type = 'SET';
     SET @forSale = false;
     SET @extra_description = @notes;

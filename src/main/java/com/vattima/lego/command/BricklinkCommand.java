@@ -1,7 +1,6 @@
 package com.vattima.lego.command;
 
-import com.bricklink.web.support.BricklinkSession;
-import com.bricklink.web.support.BricklinkWebService;
+import com.bricklink.web.api.BricklinkWebService;
 import com.vattima.lego.imaging.model.AlbumManifest;
 import com.vattima.lego.imaging.service.AlbumManager;
 import com.vattima.lego.imaging.service.ImageScalingService;
@@ -84,11 +83,14 @@ public class BricklinkCommand implements Runnable {
             BricklinkWebService bricklinkWebService = parent.getBricklinkWebService();
             try {
                 AlbumManifest albumManifest = photoUploadHolder.getAlbumManifest();
-                Path photoPath = albumManifest.getPrimaryPhoto().getAbsolutePath();
+                Path photoPath = albumManifest.getPrimaryPhoto()
+                                              .getAbsolutePath();
                 log.info("Scaling photo [{}]", photoPath);
                 Path scaledPhotoPath = imageScalingService.scale(photoPath);
-                log.info("Invoking bricklinkWebService.uploadInventoryImage({}, {})", photoUploadHolder.getBricklinkInventory().getInventoryId(), scaledPhotoPath);
-                bricklinkWebService.uploadInventoryImage(photoUploadHolder.getBricklinkInventory().getInventoryId(), scaledPhotoPath);
+                log.info("Invoking bricklinkWebService.uploadInventoryImage({}, {})", photoUploadHolder.getBricklinkInventory()
+                                                                                                       .getInventoryId(), scaledPhotoPath);
+                bricklinkWebService.uploadInventoryImage(photoUploadHolder.getBricklinkInventory()
+                                                                          .getInventoryId(), scaledPhotoPath);
             } catch (Exception e) {
                 log.error(e.getMessage(), e);
             }
