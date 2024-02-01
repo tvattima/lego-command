@@ -17,7 +17,7 @@
   <properties>
     <java.version>17</java.version>
     <bricklink-inventory.version>1.2.0-SNAPSHOT</bricklink-inventory.version>
-    <bricklink-data.version>1.2.0-SNAPSHOT</bricklink-data.version>
+    <bricklink-data.version>1.2.1-SNAPSHOT</bricklink-data.version>
     <bricklink-rest.version>1.2.0-SNAPSHOT</bricklink-rest.version>
     <bricklink-fulfillment.version>1.2.0-SNAPSHOT</bricklink-fulfillment.version>
     <lego-imaging.version>1.2.0-SNAPSHOT</lego-imaging.version>

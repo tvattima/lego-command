@@ -71,13 +71,12 @@ public class InventoryCommand implements Runnable {
         @Override
         public void run() {
             List<String> itemsToInclude = new ArrayList<>();
-            //itemsToInclude.add("3e54c082348925603b06845060c9c80d");
 
             BricklinkInventoryDao bricklinkInventoryDao = parent.getBricklinkInventoryDao();
             PriceCalculatorService priceCalculatorService = parent.getPriceCalculatorService();
             DoubleAdder value = new DoubleAdder();
             AtomicInteger count = new AtomicInteger();
-            bricklinkInventoryDao.getAll()
+            bricklinkInventoryDao.getAllForSale()
                                  .parallelStream()
                                  .filter(bi -> ((itemsToInclude.size() == 0) || (itemsToInclude.contains(bi.getUuid()) || itemsToInclude.contains(bi.getBlItemNo()))))
                                  .forEach(bi -> {
@@ -188,18 +187,18 @@ public class InventoryCommand implements Runnable {
 
             try {
                 List<String> itemsToInclude = new ArrayList<>();
-                itemsToInclude.add("5d233bc5bc257d7672e3f74ae24169a1");
-                itemsToInclude.add("a6b795d97c93202fd3647564fca6838f");
-                itemsToInclude.add("d3ed8e8966c50d0e75eba3d417f4dc33");
-                itemsToInclude.add("bc865fe2d69d73ae49b391b0c733c914");
-                itemsToInclude.add("66ce3c467972532ec922c48aa57c84ee");
-                itemsToInclude.add("cee8e1f1d37c5fe9ea8e17a8864607e8");
-                itemsToInclude.add("99705fde39ce3314306c2a325ea5b344");
-                itemsToInclude.add("816483c83a3f63dd338be305b89be608");
-                itemsToInclude.add("59489570a2a4db151f64407c299185eb");
-                itemsToInclude.add("f80b05815c1c3bc55db3edbf90415614");
-                itemsToInclude.add("23e3659367c5afcb1b121bb95f9b1aeb");
-                itemsToInclude.add("b88148fff1e7ea93fcfb15d5a4874790");
+//                itemsToInclude.add("5d233bc5bc257d7672e3f74ae24169a1");
+//                itemsToInclude.add("a6b795d97c93202fd3647564fca6838f");
+//                itemsToInclude.add("d3ed8e8966c50d0e75eba3d417f4dc33");
+//                itemsToInclude.add("bc865fe2d69d73ae49b391b0c733c914");
+//                itemsToInclude.add("66ce3c467972532ec922c48aa57c84ee");
+//                itemsToInclude.add("cee8e1f1d37c5fe9ea8e17a8864607e8");
+//                itemsToInclude.add("99705fde39ce3314306c2a325ea5b344");
+//                itemsToInclude.add("816483c83a3f63dd338be305b89be608");
+//                itemsToInclude.add("59489570a2a4db151f64407c299185eb");
+//                itemsToInclude.add("f80b05815c1c3bc55db3edbf90415614");
+//                itemsToInclude.add("23e3659367c5afcb1b121bb95f9b1aeb");
+//                itemsToInclude.add("b88148fff1e7ea93fcfb15d5a4874790");
 
 
                 bricklinkInventoryDao.getInventoryWork()
