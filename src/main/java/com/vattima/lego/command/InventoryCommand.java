@@ -132,14 +132,19 @@ public class InventoryCommand implements Runnable {
             bricklinkInventoryDao.getAllForSale()
                                  .stream()
                                  .filter(bi -> {
-                                     BricklinkResource<Item> item = bricklinkRestClient.getCatalogItem("SET", bi.getBlItemNo());
-                                     Integer categoryId = item.getData()
-                                                              .getCategory_id();
-                                     return this.isATrainCategory(categoryId);
+                                     try {
+                                         BricklinkResource<Item> item = bricklinkRestClient.getCatalogItem("SET", bi.getBlItemNo());
+                                         Integer categoryId = item.getData()
+                                                                  .getCategory_id();
+                                         return this.isATrainCategory(categoryId);
+                                     } catch (Exception e) {
+                                         log.error(e.getMessage(), e);
+                                         return true;
+                                     }
                                  })
                                  .forEach(bi -> {
                                      bricklinkInventoryDao.setNotForSale(bi.getBlInventoryId());
-                                     log.info("[{}}", bi);
+                                     log.info("[{}]", bi);
                                  });
         }
 

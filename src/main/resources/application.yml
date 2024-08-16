@@ -6,8 +6,8 @@ spring:
    application:
       name: Lego Commands
    datasource:
-      client-config-dir: C:\Users\tvatt\.credentials\site5\database
-      client-config-file: site5-database-configuration.json
+      client-config-dir: C:\Users\tvatt\.credentials\database
+      client-config-file: database-configuration.json
       database-key-name: site5-dev-lego
       hikari:
          connection-timeout: 180000
@@ -24,8 +24,8 @@ spring:
 
 lego:
    imaging:
-      root-images-folder: C:/Users/tvatt/Desktop/lego-collection-photos
-      root-inventory-items-folder: C:/Users/tvatt/Desktop/lego-collection-photos
+      root-images-folder: D:/data/lego/lego-collection-photos
+      root-inventory-items-folder: D:/data/lego/lego-collection-photos
       keywords-key-name: "Keywords:"
 
 bitly:

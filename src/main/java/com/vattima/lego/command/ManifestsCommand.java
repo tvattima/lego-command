@@ -30,7 +30,7 @@ public class ManifestsCommand implements Runnable {
     private final LegoImagingProperties legoImagingProperties;
     private final PhotoServiceUploadManager photoServiceUploadManager;
 
-    @CommandLine.Option(names = "--path", descriptionKey = "path")
+    @CommandLine.Option(names = "--path", descriptionKey = "path", required = true)
     Path path;
 
     @Override
