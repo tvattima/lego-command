@@ -48,7 +48,7 @@ public class ManifestsCommand implements Runnable {
         public void run() {
             log.info("ManifestsFindCommand path=[{}]", parent.getPath());
             Stream<AlbumManifest> manifests = parent.getAlbumManager()
-                                                    .findManifests(parent.getPath());
+                    .findManifests(parent.getPath());
             manifests.forEach(m -> {
                 System.out.println("Path [" + m.getAlbumManifestFile(parent.getPath()) + "]");
                 System.out.println("Title [" + m.getBlItemNumber() + " - " + m.getUuid() + "]");
@@ -56,9 +56,9 @@ public class ManifestsCommand implements Runnable {
                 System.out.println("URL [" + m.getUrl() + "]");
                 System.out.println("Photos");
                 m.getPhotos()
-                 .forEach(pmd -> {
-                     System.out.println("\tFilename [" + pmd.getFilename() + "], PhotoId [" + pmd.getPhotoId() + "], Is Primary [" + pmd.getPrimary() + "], Keywords [" + pmd.getKeywords() + "], MD5 [" + pmd.getMd5() + "]");
-                 });
+                        .forEach(pmd -> {
+                            System.out.println("\tFilename [" + pmd.getFilename() + "], PhotoId [" + pmd.getPhotoId() + "], Is Primary [" + pmd.getPrimary() + "], Keywords [" + pmd.getKeywords() + "], MD5 [" + pmd.getMd5() + "]");
+                        });
                 System.out.println();
             });
         }
@@ -75,10 +75,10 @@ public class ManifestsCommand implements Runnable {
             log.info("ManifestsUpdateCommand");
             try {
                 Files.newDirectoryStream(parent.legoImagingProperties.getRootImagesPath(), "*.jpg")
-                     .forEach(p -> {
-                         PhotoMetaData photoMetaData = new PhotoMetaData(p.getParent(), p.getFileName());
-                         parent.albumManager.addPhoto(photoMetaData);
-                     });
+                        .forEach(p -> {
+                            PhotoMetaData photoMetaData = new PhotoMetaData(p.getParent(), p.getFileName());
+                            parent.albumManager.addPhoto(photoMetaData);
+                        });
             } catch (IOException e) {
                 log.error("[{}]", e.getMessage(), e);
             }

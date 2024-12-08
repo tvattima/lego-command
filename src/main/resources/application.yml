@@ -6,8 +6,6 @@ spring:
    application:
       name: Lego Commands
    datasource:
-      client-config-dir: C:\Users\tvatt\.credentials\database
-      client-config-file: database-configuration.json
       database-key-name: site5-dev-lego
       hikari:
          connection-timeout: 180000
@@ -21,6 +19,8 @@ spring:
          validation-timeout: 60000
          pool-name: site5-mysql-jdbc-pool
          max-lifetime: 10000
+   config:
+      import: file:/dev/config/bricklink/bricklink-client-api-keys.yml, file:/dev/config/bricklink/bricklink-web.yml, file:/dev/config/database/database-configuration.yml
 
 lego:
    imaging:
@@ -41,11 +41,7 @@ logging:
 bricklink:
    rest:
       uri: https://api.bricklink.com/api/store/v1
-      client-config-dir: C:\Users\tvatt\.credentials\bricklink
-      client-config-file: bricklink-client-api-keys.json
    web:
-      client-config-dir: C:\Users\tvatt\.credentials\bricklink
-      client-config-file: bricklink-web.json
       pool:
          default-max-per-route: 20
          max-per-route: 20
