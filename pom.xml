@@ -10,7 +10,7 @@
     </parent>
     <groupId>com.vattima.lego.command</groupId>
     <artifactId>lego-command</artifactId>
-    <version>1.2.0-SNAPSHOT</version>
+    <version>1.3.0-SNAPSHOT</version>
     <name>Lego :: Commands</name>
     <description>Lego CLI</description>
 
@@ -19,6 +19,7 @@
         <bricklink-inventory.version>1.3.0-SNAPSHOT</bricklink-inventory.version>
         <bricklink-data.version>1.3.0-SNAPSHOT</bricklink-data.version>
         <bricklink-rest.version>1.3.0-SNAPSHOT</bricklink-rest.version>
+        <bricklink-html.version>1.3.0-SNAPSHOT</bricklink-html.version>
         <bricklink-fulfillment.version>1.3.0-SNAPSHOT</bricklink-fulfillment.version>
         <lego-imaging.version>1.3.0-SNAPSHOT</lego-imaging.version>
         <lombok.version>1.18.30</lombok.version>
@@ -42,6 +43,12 @@
             <groupId>com.bricklink.data</groupId>
             <artifactId>bricklink-data</artifactId>
             <version>${bricklink-data.version}</version>
+        </dependency>
+
+        <dependency>
+            <groupId>com.bricklink.api</groupId>
+            <artifactId>bricklink-html</artifactId>
+            <version>${bricklink-html.version}</version>
         </dependency>
 
         <dependency>
@@ -105,12 +112,6 @@
         <dependency>
             <groupId>org.springframework.boot</groupId>
             <artifactId>spring-boot-actuator</artifactId>
-        </dependency>
-        <dependency>
-            <groupId>com.bricklink.api</groupId>
-            <artifactId>bricklink-html</artifactId>
-            <version>1.3.0-SNAPSHOT</version>
-            <scope>compile</scope>
         </dependency>
     </dependencies>
 
