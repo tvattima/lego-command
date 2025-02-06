@@ -17,7 +17,7 @@
     <properties>
         <java.version>22</java.version>
         <bricklink-inventory.version>1.3.0-SNAPSHOT</bricklink-inventory.version>
-        <bricklink-data.version>1.3.0-SNAPSHOT</bricklink-data.version>
+        <lego-data.version>1.3.0-SNAPSHOT</lego-data.version>
         <bricklink-rest.version>1.3.0-SNAPSHOT</bricklink-rest.version>
         <bricklink-html.version>1.3.0-SNAPSHOT</bricklink-html.version>
         <bricklink-fulfillment.version>1.3.0-SNAPSHOT</bricklink-fulfillment.version>
@@ -40,9 +40,9 @@
         </dependency>
 
         <dependency>
-            <groupId>com.bricklink.data</groupId>
-            <artifactId>bricklink-data</artifactId>
-            <version>${bricklink-data.version}</version>
+            <groupId>net.lego</groupId>
+            <artifactId>lego-data</artifactId>
+            <version>${lego-data.version}</version>
         </dependency>
 
         <dependency>
