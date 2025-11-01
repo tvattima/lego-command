@@ -35,7 +35,7 @@ bitly:
 logging:
    level:
       root: INFO
-      org.apache.http: ERROR
+      org.apache.hc.core5.http: ERROR
       okhttp3: WARN
 
 bricklink:
