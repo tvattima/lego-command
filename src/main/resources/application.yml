@@ -29,7 +29,7 @@ lego:
       keywords-key-name: "Keywords:"
 
 bitly:
-   client-config-dir: C:\Users\tvatt\.credentials\bitly.api
+   client-config-dir: D:\dev\config\bitly.api
    client-config-file: bitly-client-api-keys.json
 
 logging:
@@ -48,14 +48,14 @@ bricklink:
          max-total: 50
 
 flickr:
-   client-config-dir: C:\Users\tvatt\.credentials\flickr.api
+   client-config-dir: D:\dev\config\flickr.api
    client-config-file: flickr-client-api-keys.json
    application-name: lego-imaging
    debug-request: false
    debug-stream: false
 
 shipstation:
-   client-config-dir: C:\Users\tvatt\.credentials\shipstation.api
+   client-config-dir: D:\dev\config\shipstation.api
    client-config-file: shipstation-client-config.json
 
 reference:

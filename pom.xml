@@ -17,7 +17,7 @@
     <properties>
         <java.version>22</java.version>
         <bricklink-inventory.version>1.3.0-SNAPSHOT</bricklink-inventory.version>
-        <lego-data.version>1.3.0-SNAPSHOT</lego-data.version>
+        <lego-data.version>1.0.0-SNAPSHOT</lego-data.version>
         <bricklink-rest.version>1.3.0-SNAPSHOT</bricklink-rest.version>
         <bricklink-html.version>1.3.0-SNAPSHOT</bricklink-html.version>
         <bricklink-fulfillment.version>1.3.0-SNAPSHOT</bricklink-fulfillment.version>
@@ -40,8 +40,14 @@
         </dependency>
 
         <dependency>
-            <groupId>net.lego</groupId>
-            <artifactId>lego-data</artifactId>
+            <groupId>io-legohunter</groupId>
+            <artifactId>lego-data-model-v1</artifactId>
+            <version>${lego-data.version}</version>
+        </dependency>
+
+        <dependency>
+            <groupId>io-legohunter</groupId>
+            <artifactId>lego-data-starter</artifactId>
             <version>${lego-data.version}</version>
         </dependency>
 
