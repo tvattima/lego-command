@@ -6,7 +6,7 @@ spring:
    application:
       name: Lego Commands
    datasource:
-      database-key-name: site5-dev-lego
+      database-key-name: rasppi5-01-lego-prod-legacy
       hikari:
          connection-timeout: 180000
          idle-timeout: 60000
@@ -20,7 +20,7 @@ spring:
          pool-name: site5-mysql-jdbc-pool
          max-lifetime: 10000
    config:
-      import: file:/dev/config/bricklink/bricklink-client-api-keys.yml, file:/dev/config/bricklink/bricklink-web.yml, file:/dev/config/database/database-configuration.yml
+      import: file:/dev/config/bricklink-client-api-keys.yml, file:/dev/config/bricklink-web.yml, file:/dev/config/database-configuration.yml
 
 lego:
    imaging:
