@@ -1,15 +1,7 @@
 package com.vattima.lego.command;
 
-import com.bricklink.api.rest.client.BricklinkRestClient;
-import com.vattima.bricklink.inventory.service.InventoryService;
-import com.vattima.bricklink.inventory.service.SaleItemDescriptionBuilder;
-import com.vattima.lego.imaging.config.LegoImagingProperties;
-import com.vattima.lego.imaging.service.AlbumManager;
-import com.vattima.lego.imaging.service.PhotoServiceUploadManager;
-import com.vattima.lego.inventory.pricing.BricklinkPriceCrawler;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
-import net.bricklink.data.lego.dao.BricklinkInventoryDao;
 import org.fusesource.jansi.AnsiConsole;
 import org.springframework.boot.ApplicationArguments;
 import org.springframework.boot.ApplicationRunner;
